@@ -47,13 +47,11 @@ const Header = () => {
           </button>
           <div className="header-phone">
             <a
-              href="https://wa.me/543573403958"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/catalogo"
               style={{ color: "inherit", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
             >
-              <i className="fas fa-phone"></i>
-              <span>3573403958</span>
+              <i className="fas fa-list"></i>
+              <span>CATÁLOGO</span>
             </a>
           </div>
         </div>

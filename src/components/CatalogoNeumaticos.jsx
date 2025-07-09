@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-function CatalogoNeumaticos() {
+const filtros = ["Todo", "Autos", "Camionetas", "Camiones"];
+
+function CatalogoNeumaticos({ onNeumaticoClick }) {
   const [neumaticos, setNeumaticos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,45 +25,91 @@ function CatalogoNeumaticos() {
   if (!neumaticos.length) return <p style={{ textAlign: "center" }}>No hay neumáticos disponibles.</p>;
 
   return (
-    <div className="catalogo-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 24 }}>
-      {neumaticos.map((n) => (
-        <div key={n.id} className="neumatico-card" style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.07)", padding: 24, display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <img
-            src={n.imagen || "/images/placeholder-tire.png"}
-            alt={n.nombre}
-            style={{ width: 120, height: 120, objectFit: "contain", marginBottom: 16 }}
-          />
-          <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 4 }}>{n.nombre}</div>
-          <div style={{ color: "#888", fontSize: 14, marginBottom: 8 }}>{n.marcas?.nombre}</div>
-          <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>
-            ${n.precio}
-            {n.precio_anterior && (
-              <span style={{ textDecoration: "line-through", color: "#888", marginLeft: 8, fontWeight: 400 }}>
-                ${n.precio_anterior}
-              </span>
-            )}
-          </div>
-          <div style={{ fontSize: 13, color: "#444", marginBottom: 12, textAlign: "center" }}>{n.descripcion}</div>
-          {n.medidas && n.medidas.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-              {n.medidas.map((m) => (
-                <span key={m.id} style={{ background: "#f3f3f3", borderRadius: 8, padding: "2px 10px", fontSize: 13 }}>
-                  {m.medida} {m.stock !== null && <span style={{ color: '#22c55e', fontWeight: 500 }}>({m.stock})</span>}
-                </span>
-              ))}
-            </div>
-          )}
-          <a
-            href={`https://wa.me/543573403958?text=Hola,%20quiero%20consultar%20por%20el%20neumático%20${encodeURIComponent(n.nombre)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-primary"
-            style={{ marginTop: 8, background: "#25D366", color: "#fff", borderRadius: 8, padding: "8px 18px", fontWeight: 600, textDecoration: "none", display: "inline-block" }}
+    <div style={{ width: "100%", background: "#f3f6fa", minHeight: "100vh", paddingBottom: 32 }}>
+      {/* Filtros visuales tipo chips */}
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "0 0 18px 0", marginBottom: 10 }}>
+        {filtros.map((f, i) => (
+          <button
+            key={f}
+            style={{
+              background: i === 0 ? "#0ea5e9" : "#e0f2fe",
+              color: i === 0 ? "#fff" : "#0ea5e9",
+              border: "none",
+              borderRadius: 18,
+              padding: "8px 22px",
+              fontWeight: 700,
+              fontSize: 16,
+              boxShadow: i === 0 ? "0 2px 8px rgba(14,165,233,0.10)" : "none",
+              cursor: "pointer",
+              outline: "none",
+              minWidth: 90,
+              transition: "background 0.2s, color 0.2s"
+            }}
+            tabIndex={-1}
           >
-            Consultar por WhatsApp
-          </a>
-        </div>
-      ))}
+            {f}
+          </button>
+        ))}
+      </div>
+      {/* Catálogo grid adaptativo */}
+      <div className="catalogo-grid">
+        {neumaticos.map((n) => (
+          <div
+            key={n.id}
+            className="neumatico-card"
+            style={{
+              cursor: onNeumaticoClick ? "pointer" : "default"
+            }}
+            onClick={onNeumaticoClick ? () => onNeumaticoClick(n.id) : undefined}
+          >
+            <img
+              src={n.imagen || "/images/placeholder-tire.png"}
+              alt={n.nombre}
+              style={{ width: 64, height: 64, objectFit: "contain", background: "#f8fafc", borderRadius: 10, boxShadow: "0 1px 4px rgba(14,165,233,0.05)", flexShrink: 0 }}
+            />
+            <div style={{ flex: 1, minWidth: 0, marginLeft: 12, display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>{n.nombre}</div>
+              <div style={{ color: "#64748b", fontSize: 12, marginBottom: 2, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.descripcion}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: "#171717", marginBottom: 2 }}>
+                ${n.precio}
+                {n.precio_anterior && (
+                  <span style={{ textDecoration: "line-through", color: "#94a3b8", marginLeft: 6, fontWeight: 500, fontSize: 12 }}>
+                    ${n.precio_anterior}
+                  </span>
+                )}
+              </div>
+            </div>
+            <a
+              href={`https://wa.me/543573403958?text=Hola,%20quiero%20consultar%20por%20el%20neumático%20${encodeURIComponent(n.nombre)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary"
+              style={{
+                background: "#171717",
+                color: "#fff",
+                borderRadius: 8,
+                padding: 7,
+                fontWeight: 700,
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+                boxShadow: "none",
+                border: "none",
+                marginLeft: 10,
+                minWidth: 32,
+                minHeight: 32,
+                width: 32,
+                height: 32
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <i className="fab fa-whatsapp" style={{ fontSize: 16 }}></i>
+            </a>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,11 +35,11 @@ const Header = () => {
           </div>
           <nav>
             <ul>
-              <li><a href="#inicio" onClick={e => handleSmoothScroll(e, "#inicio")}>Inicio</a></li>
-              <li><a href="#servicios" onClick={e => handleSmoothScroll(e, "#servicios")}>Servicios</a></li>
-              <li><a href="#productos" onClick={e => handleSmoothScroll(e, "#productos")}>Productos</a></li>
-              <li><a href="#nosotros" onClick={e => handleSmoothScroll(e, "#nosotros")}>Nosotros</a></li>
-              <li><a href="#contacto" onClick={e => handleSmoothScroll(e, "#contacto")}>Ubicación</a></li>
+              <li><Link href="/#inicio" scroll={true}>Inicio</Link></li>
+              <li><Link href="/#servicios" scroll={true}>Servicios</Link></li>
+              <li><Link href="/#productos" scroll={true}>Productos</Link></li>
+              <li><Link href="/#nosotros" scroll={true}>Nosotros</Link></li>
+              <li><Link href="/#contacto" scroll={true}>Ubicación</Link></li>
             </ul>
           </nav>
           <button className="mobile-menu" onClick={toggleMobileMenu}>
@@ -56,14 +57,34 @@ const Header = () => {
           </div>
         </div>
       </div>
-      <div className={`mobile-nav${mobileMenuOpen ? " open" : ""}`} id="mobileNav">
+      <div className={`mobile-nav${mobileMenuOpen ? " active" : ""}`} id="mobileNav">
         <ul>
-          <li><a href="#inicio" onClick={e => handleSmoothScroll(e, "#inicio")}>Inicio</a></li>
-          <li><a href="#servicios" onClick={e => handleSmoothScroll(e, "#servicios")}>Servicios</a></li>
-          <li><a href="#productos" onClick={e => handleSmoothScroll(e, "#productos")}>Productos</a></li>
-          <li><a href="#nosotros" onClick={e => handleSmoothScroll(e, "#nosotros")}>Nosotros</a></li>
-          <li><a href="#contacto" onClick={e => handleSmoothScroll(e, "#contacto")}>Ubicación</a></li>
+          <li><Link href="/#inicio" scroll={true} onClick={closeMobileMenu}>Inicio</Link></li>
+          <li><Link href="/#servicios" scroll={true} onClick={closeMobileMenu}>Servicios</Link></li>
+          <li><Link href="/#productos" scroll={true} onClick={closeMobileMenu}>Productos</Link></li>
+          <li><Link href="/#nosotros" scroll={true} onClick={closeMobileMenu}>Nosotros</Link></li>
+          <li><Link href="/#contacto" scroll={true} onClick={closeMobileMenu}>Ubicación</Link></li>
         </ul>
+        <div style={{ padding: "0 20px 30px 20px", display: "flex", justifyContent: "center" }}>
+          <Link href="/catalogo" onClick={closeMobileMenu} style={{
+            color: "#0ea5e9",
+            background: "linear-gradient(135deg, #f0f9ff, #e0f2fe)",
+            borderRadius: 50,
+            border: "2px solid rgba(14, 165, 233, 0.1)",
+            padding: "14px 32px",
+            fontWeight: 700,
+            fontSize: 18,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(14,165,233,0.10)",
+            marginTop: 10
+          }}>
+            <i className="fas fa-list"></i>
+            <span>CATÁLOGO</span>
+          </Link>
+        </div>
       </div>
     </header>
   );

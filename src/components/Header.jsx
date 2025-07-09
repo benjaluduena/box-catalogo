@@ -37,7 +37,7 @@ const Header = () => {
             <ul>
               <li><Link href="/#inicio" scroll={true}>Inicio</Link></li>
               <li><Link href="/#servicios" scroll={true}>Servicios</Link></li>
-              <li><Link href="/#productos" scroll={true}>Productos</Link></li>
+              <li><Link href="/#marcas" scroll={true}>Marcas</Link></li>
               <li><Link href="/#nosotros" scroll={true}>Nosotros</Link></li>
               <li><Link href="/#contacto" scroll={true}>Ubicación</Link></li>
             </ul>
@@ -61,7 +61,7 @@ const Header = () => {
         <ul>
           <li><Link href="/#inicio" scroll={true} onClick={closeMobileMenu}>Inicio</Link></li>
           <li><Link href="/#servicios" scroll={true} onClick={closeMobileMenu}>Servicios</Link></li>
-          <li><Link href="/#productos" scroll={true} onClick={closeMobileMenu}>Productos</Link></li>
+          <li><Link href="/#marcas" scroll={true} onClick={closeMobileMenu}>Marcas</Link></li>
           <li><Link href="/#nosotros" scroll={true} onClick={closeMobileMenu}>Nosotros</Link></li>
           <li><Link href="/#contacto" scroll={true} onClick={closeMobileMenu}>Ubicación</Link></li>
         </ul>

@@ -1,6 +1,6 @@
 function Brands() {
   return (
-    <section id="productos" className="brands">
+    <section id="marcas" className="brands">
       <div className="container">
         <div className="section-header">
           <h2>Marcas que Ofrecemos</h2>

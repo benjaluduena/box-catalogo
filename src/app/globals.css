@@ -1459,41 +1459,46 @@ html {
 }
 
 @media (max-width: 600px) {
-    .catalogo-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-        padding: 0 0 24px 0;
-    }
-    .neumatico-card {
-        max-width: 98vw;
-        min-width: 0;
-        border-radius: 16px;
-        padding: 14px 10px 14px 6px;
-        min-height: 110px;
-        box-shadow: 0 2px 10px rgba(14, 165, 233, 0.10);
-        margin: 0 auto;
-        flex-direction: row;
-        align-items: center;
-    }
-    .neumatico-card img {
-        height: 70px !important;
-        min-width: 54px;
-        margin-left: -10px;
-        margin-right: 8px;
-    }
-    .neumatico-card .btn {
-        min-width: 28px;
-        min-height: 28px;
-        width: 28px;
-        height: 28px;
-        font-size: 14px;
-        margin-left: 6px;
-        padding: 4px;
-    }
-    .neumatico-card div[style] {
-        margin-left: 6px !important;
-        gap: 1px !important;
-    }
+  .service-card {
+    min-height: 80px;
+    height: 80px;
+    width: 100% !important;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 14px;
+    padding: 0 14px 0 12px;
+    margin-bottom: 18px !important;
+    border-radius: 18px;
+    box-shadow: 0 4px 18px rgba(14, 165, 233, 0.13);
+    border: 1.5px solid #e0e7ef;
+    background: #fff;
+    position: relative;
+  }
+  .service-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e0f2fe 60%, #bae6fd 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(14,165,233,0.08);
+    flex-shrink: 0;
+    animation: float 10s ease-in-out infinite;
+  }
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
 /* Grilla horizontal para escritorio del catálogo de neumáticos */

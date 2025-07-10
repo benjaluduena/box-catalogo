@@ -87,12 +87,16 @@ export default function NeumaticoDetallePage() {
           fontWeight: 700,
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          borderRadius: 10,
-          padding: "7px 18px",
+          justifyContent: "center",
+          borderRadius: "50%",
+          width: 38,
+          height: 38,
+          padding: 0,
           transition: "background 0.2s, color 0.2s",
           zIndex: 2
-        }}>&larr; Volver</button>
+        }} aria-label="Volver">
+          <i className="fas fa-arrow-left"></i>
+        </button>
         <div style={{ minWidth: 260, maxWidth: 420, flex: 1, background: "#f8fafc", borderRadius: 24, boxShadow: "0 6px 32px rgba(14,165,233,0.10)", padding: 24, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }}>
           <img
             src={neumatico.imagen || "/images/placeholder-tire.png"}

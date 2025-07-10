@@ -2,11 +2,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-const filtros = ["Todo", "Autos", "Camionetas", "Camiones"];
+const filtros = [
+  { label: "Todo", value: "Todo" },
+  { label: "Autos", value: "Autos" },
+  { label: "Camionetas", value: "Camionetas" },
+  { label: "Camiones", value: "Camiones" }
+];
 
 function CatalogoNeumaticos({ onNeumaticoClick }) {
   const [neumaticos, setNeumaticos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filtro, setFiltro] = useState("Todo");
 
   useEffect(() => {
     async function fetchNeumaticos() {
@@ -20,6 +26,14 @@ function CatalogoNeumaticos({ onNeumaticoClick }) {
     fetchNeumaticos();
   }, []);
 
+  const filtrarNeumaticos = (n) => {
+    if (filtro === "Todo") return true;
+    if (filtro === "Autos") return n.categoria === "Autos";
+    if (filtro === "Camionetas") return n.categoria === "Camionetas";
+    if (filtro === "Camiones") return n.categoria === "Camiones";
+    return true;
+  };
+
   if (loading) return <p style={{ textAlign: "center" }}>Cargando neumáticos...</p>;
 
   if (!neumaticos.length) return <p style={{ textAlign: "center" }}>No hay neumáticos disponibles.</p>;
@@ -30,30 +44,31 @@ function CatalogoNeumaticos({ onNeumaticoClick }) {
       <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "0 0 18px 0", marginBottom: 10 }}>
         {filtros.map((f, i) => (
           <button
-            key={f}
+            key={f.value}
             style={{
-              background: i === 0 ? "#0ea5e9" : "#e0f2fe",
-              color: i === 0 ? "#fff" : "#0ea5e9",
+              background: filtro === f.value ? "#0ea5e9" : "#e0f2fe",
+              color: filtro === f.value ? "#fff" : "#0ea5e9",
               border: "none",
               borderRadius: 18,
               padding: "8px 22px",
               fontWeight: 700,
               fontSize: 16,
-              boxShadow: i === 0 ? "0 2px 8px rgba(14,165,233,0.10)" : "none",
+              boxShadow: filtro === f.value ? "0 2px 8px rgba(14,165,233,0.10)" : "none",
               cursor: "pointer",
               outline: "none",
               minWidth: 90,
               transition: "background 0.2s, color 0.2s"
             }}
             tabIndex={-1}
+            onClick={() => setFiltro(f.value)}
           >
-            {f}
+            {f.label}
           </button>
         ))}
       </div>
       {/* Catálogo grid adaptativo */}
       <div className="catalogo-grid">
-        {neumaticos.map((n) => (
+        {neumaticos.filter(filtrarNeumaticos).map((n) => (
           <div
             key={n.id}
             className="neumatico-card"

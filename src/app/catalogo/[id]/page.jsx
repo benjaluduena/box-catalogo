@@ -112,11 +112,6 @@ export default function NeumaticoDetallePage() {
             {neumatico.precio_anterior && (
               <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: 20, fontWeight: 600 }}>${neumatico.precio_anterior}</span>
             )}
-            {medidaSeleccionada && (
-              <span style={{ marginLeft: 16, color: '#22c55e', fontWeight: 700, fontSize: 15 }}>
-                Stock {medidaSeleccionada.stock}
-              </span>
-            )}
           </div>
           <div style={{ fontSize: 16, color: "#64748b", marginBottom: 22, minHeight: 40 }}>{neumatico.descripcion}</div>
           <div style={{ marginBottom: 22 }}>
@@ -131,7 +126,7 @@ export default function NeumaticoDetallePage() {
                     onChange={() => handleMedida(m)}
                     style={{ accentColor: "#0ea5e9" }}
                   />
-                  {m.medida} <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 4 }}>({m.stock})</span>
+                  {m.medida}
                 </label>
               ))}
             </div>

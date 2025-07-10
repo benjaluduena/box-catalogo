@@ -1,130 +1,122 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
-const filtros = [
-  { label: "Todo", value: "Todo" },
-  { label: "Autos", value: "Autos" },
-  { label: "Camionetas", value: "Camionetas" },
-  { label: "Camiones", value: "Camiones" }
-];
-
-function CatalogoNeumaticos({ onNeumaticoClick }) {
-  const [neumaticos, setNeumaticos] = useState([]);
+function CatalogoNeumaticos() {
+  const [tiposVehiculo, setTiposVehiculo] = useState([]);
+  const [neumaticosPorTipo, setNeumaticosPorTipo] = useState({});
   const [loading, setLoading] = useState(true);
-  const [filtro, setFiltro] = useState("Todo");
+  const router = useRouter();
 
   useEffect(() => {
-    async function fetchNeumaticos() {
-      const { data, error } = await supabase
+    async function fetchTiposYNeumaticos() {
+      setLoading(true);
+      // Obtener tipos de vehículo
+      const { data: tipos, error: errorTipos } = await supabase
+        .from("tipos_vehiculo")
+        .select("id, nombre")
+        .order("nombre");
+      if (errorTipos) {
+        setTiposVehiculo([]);
+        setLoading(false);
+        return;
+      }
+      setTiposVehiculo(tipos);
+      // Obtener neumáticos agrupados por tipo
+      const { data: neumaticos, error: errorNeumaticos } = await supabase
         .from("neumaticos")
-        .select(`*, marcas(nombre, logo), medidas(id, medida, stock)`)
+        .select("*, marcas(nombre, logo), tipos_vehiculo(nombre)")
         .order("id", { ascending: true });
-      if (!error) setNeumaticos(data);
+      if (errorNeumaticos) {
+        setNeumaticosPorTipo({});
+        setLoading(false);
+        return;
+      }
+      // Agrupar neumáticos por tipo_id
+      const agrupados = {};
+      tipos.forEach(tipo => {
+        agrupados[tipo.id] = [];
+      });
+      neumaticos.forEach(n => {
+        if (n.tipo_id && agrupados[n.tipo_id]) {
+          agrupados[n.tipo_id].push(n);
+        }
+      });
+      setNeumaticosPorTipo(agrupados);
       setLoading(false);
     }
-    fetchNeumaticos();
+    fetchTiposYNeumaticos();
   }, []);
 
-  const filtrarNeumaticos = (n) => {
-    if (filtro === "Todo") return true;
-    if (filtro === "Autos") return n.categoria === "Autos";
-    if (filtro === "Camionetas") return n.categoria === "Camionetas";
-    if (filtro === "Camiones") return n.categoria === "Camiones";
-    return true;
-  };
-
-  if (loading) return <p style={{ textAlign: "center" }}>Cargando neumáticos...</p>;
-
-  if (!neumaticos.length) return <p style={{ textAlign: "center" }}>No hay neumáticos disponibles.</p>;
+  if (loading) return <p style={{ textAlign: "center" }}>Cargando catálogo...</p>;
+  if (!tiposVehiculo.length) return <p style={{ textAlign: "center" }}>No hay tipos de vehículo disponibles.</p>;
 
   return (
     <div style={{ width: "100%", background: "#f3f6fa", minHeight: "100vh", paddingBottom: 32 }}>
-      {/* Filtros visuales tipo chips */}
-      <div style={{ display: "flex", gap: 12, overflowX: "auto", padding: "0 0 18px 0", marginBottom: 10 }}>
-        {filtros.map((f, i) => (
-          <button
-            key={f.value}
-            style={{
-              background: filtro === f.value ? "#0ea5e9" : "#e0f2fe",
-              color: filtro === f.value ? "#fff" : "#0ea5e9",
-              border: "none",
-              borderRadius: 18,
-              padding: "8px 22px",
-              fontWeight: 700,
-              fontSize: 16,
-              boxShadow: filtro === f.value ? "0 2px 8px rgba(14,165,233,0.10)" : "none",
-              cursor: "pointer",
-              outline: "none",
-              minWidth: 90,
-              transition: "background 0.2s, color 0.2s"
-            }}
-            tabIndex={-1}
-            onClick={() => setFiltro(f.value)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-      {/* Catálogo grid adaptativo */}
-      <div className="catalogo-grid">
-        {neumaticos.filter(filtrarNeumaticos).map((n) => (
-          <div
-            key={n.id}
-            className="neumatico-card"
-            style={{
-              cursor: onNeumaticoClick ? "pointer" : "default"
-            }}
-            onClick={onNeumaticoClick ? () => onNeumaticoClick(n.id) : undefined}
-          >
-            <img
-              src={n.imagen || "/images/placeholder-tire.png"}
-              alt={n.nombre}
-              style={{ width: 64, height: 64, objectFit: "contain", background: "#f8fafc", borderRadius: 10, boxShadow: "0 1px 4px rgba(14,165,233,0.05)", flexShrink: 0 }}
-            />
-            <div style={{ flex: 1, minWidth: 0, marginLeft: 12, display: "flex", flexDirection: "column", gap: 2 }}>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 160 }}>{n.nombre}</div>
-              <div style={{ color: "#64748b", fontSize: 12, marginBottom: 2, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.descripcion}</div>
-              <div style={{ fontWeight: 700, fontSize: 15, color: "#171717", marginBottom: 2 }}>
-                ${n.precio}
-                {n.precio_anterior && (
-                  <span style={{ textDecoration: "line-through", color: "#94a3b8", marginLeft: 6, fontWeight: 500, fontSize: 12 }}>
-                    ${n.precio_anterior}
-                  </span>
-                )}
-              </div>
-            </div>
-            <a
-              href={`https://wa.me/543573403958?text=Hola,%20quiero%20consultar%20por%20el%20neumático%20${encodeURIComponent(n.nombre)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-primary"
-              style={{
-                background: "#171717",
-                color: "#fff",
-                borderRadius: 8,
-                padding: 7,
-                fontWeight: 700,
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 16,
-                boxShadow: "none",
-                border: "none",
-                marginLeft: 10,
-                minWidth: 32,
-                minHeight: 32,
-                width: 32,
-                height: 32
-              }}
-              onClick={e => e.stopPropagation()}
+      {tiposVehiculo.map(tipo => (
+        <div key={tipo.id} style={{ marginBottom: 48 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "0 8px 12px 8px" }}>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0ea5e9", margin: 0 }}>{tipo.nombre}</h2>
+            <button
+              style={{ background: "none", border: "none", color: "#0ea5e9", fontWeight: 700, fontSize: 16, cursor: "pointer", textDecoration: "underline" }}
+              onClick={() => router.push(`/catalogo?tipo=${tipo.id}`)}
             >
-              <i className="fab fa-whatsapp" style={{ fontSize: 16 }}></i>
-            </a>
+              Ver más
+            </button>
           </div>
-        ))}
-      </div>
+          <div style={{ display: "flex", gap: 18, overflowX: "auto", padding: "8px 0 8px 8px" }}>
+            {(neumaticosPorTipo[tipo.id] || []).length === 0 ? (
+              <div style={{ color: "#64748b", fontSize: 16, padding: 24 }}>No hay neumáticos para este tipo.</div>
+            ) : (
+              neumaticosPorTipo[tipo.id].map(n => (
+                <div
+                  key={n.id}
+                  style={{
+                    minWidth: 320,
+                    maxWidth: 340,
+                    background: "#fff",
+                    borderRadius: 18,
+                    boxShadow: "0 2px 12px rgba(14,165,233,0.07)",
+                    padding: 18,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                    marginRight: 8,
+                    cursor: "pointer",
+                    transition: "box-shadow 0.2s",
+                  }}
+                  onClick={() => router.push(`/catalogo/${n.id}`)}
+                >
+                  <img
+                    src={n.imagen || "/images/placeholder-tire.png"}
+                    alt={n.nombre}
+                    style={{ width: "100%", height: 120, objectFit: "contain", background: "#f8fafc", borderRadius: 10, marginBottom: 8 }}
+                  />
+                  <div style={{ fontWeight: 700, fontSize: 18, color: "#1e293b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.nombre}</div>
+                  <div style={{ color: "#64748b", fontSize: 14, marginBottom: 2, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{n.descripcion}</div>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: "#171717", marginBottom: 2 }}>
+                    ${n.precio}
+                    {n.precio_anterior && (
+                      <span style={{ textDecoration: "line-through", color: "#94a3b8", marginLeft: 6, fontWeight: 500, fontSize: 13 }}>
+                        ${n.precio_anterior}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      style={{ background: "#171717", color: "#fff", borderRadius: 8, padding: 7, fontWeight: 700, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, boxShadow: "none", border: "none", minWidth: 32, minHeight: 32, width: 32, height: 32, cursor: "pointer" }}
+                      onClick={e => { e.stopPropagation(); window.open(`https://wa.me/543573403958?text=Hola,%20quiero%20consultar%20por%20el%20neumático%20${encodeURIComponent(n.nombre)}`, "_blank"); }}
+                    >
+                      <i className="fab fa-whatsapp" style={{ fontSize: 16 }}></i>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

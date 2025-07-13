@@ -3,9 +3,14 @@ const ADMIN_TOKEN = 'box-admin-2024-secure-token';
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutos
 
+interface AuthResponse {
+  success: boolean;
+  error?: string;
+}
+
 export const auth = {
   // Verificar si el usuario está autenticado
-  isAuthenticated: () => {
+  isAuthenticated: (): boolean => {
     if (typeof window === 'undefined') return false;
     
     const token = localStorage.getItem('adminToken');
@@ -27,7 +32,7 @@ export const auth = {
   },
 
   // Iniciar sesión con protección contra ataques de fuerza bruta
-  login: (password) => {
+  login: (password: string): boolean => {
     if (typeof window === 'undefined') return false;
     
     // Verificar si está bloqueado
@@ -62,7 +67,7 @@ export const auth = {
   },
 
   // Cerrar sesión
-  logout: () => {
+  logout: (): void => {
     if (typeof window === 'undefined') return;
     
     localStorage.removeItem('adminToken');
@@ -72,21 +77,21 @@ export const auth = {
   },
 
   // Obtener token
-  getToken: () => {
+  getToken: (): string | null => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('adminToken');
   },
 
   // Verificar si hay intentos fallidos
-  getLoginAttempts: () => {
+  getLoginAttempts: (): number => {
     if (typeof window === 'undefined') return 0;
     return parseInt(localStorage.getItem('adminLoginAttempts') || '0');
   },
 
   // Verificar si está bloqueado
-  isLockedOut: () => {
+  isLockedOut: (): boolean => {
     if (typeof window === 'undefined') return false;
     const lockoutUntil = localStorage.getItem('adminLockoutUntil');
-    return lockoutUntil && Date.now() < parseInt(lockoutUntil);
+    return lockoutUntil ? Date.now() < parseInt(lockoutUntil) : false;
   }
 }; 

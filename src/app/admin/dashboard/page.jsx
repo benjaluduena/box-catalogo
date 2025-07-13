@@ -1,205 +1,102 @@
 "use client";
-import { useEffect, useState } from "react";
-import AdminLayout from "../../../components/AdminLayout";
+import { useState, useEffect } from "react";
+import AdminLayout from "../../../components/AdminLayout.jsx";
 import { supabase } from "../../../lib/supabaseClient";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
-    neumaticos: 0,
-    marcas: 0,
-    tiposVehiculo: 0,
-    medidas: 0
+    totalNeumaticos: 0,
+    totalMarcas: 0,
+    totalTipos: 0,
+    totalMedidas: 0
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        const [neumaticosRes, marcasRes, tiposRes, medidasRes] = await Promise.all([
-          supabase.from("neumaticos").select("id", { count: "exact" }),
-          supabase.from("marcas").select("id", { count: "exact" }),
-          supabase.from("tipos_vehiculo").select("id", { count: "exact" }),
-          supabase.from("medidas").select("id", { count: "exact" })
-        ]);
-
-        // Verificar errores en cada consulta
-        if (neumaticosRes.error) throw new Error("Error al cargar neumáticos");
-        if (marcasRes.error) throw new Error("Error al cargar marcas");
-        if (tiposRes.error) throw new Error("Error al cargar tipos de vehículo");
-        if (medidasRes.error) throw new Error("Error al cargar medidas");
-
-        setStats({
-          neumaticos: neumaticosRes.count || 0,
-          marcas: marcasRes.count || 0,
-          tiposVehiculo: tiposRes.count || 0,
-          medidas: medidasRes.count || 0
-        });
-      } catch (error) {
-        console.error("Error fetching stats:", error);
-        // Mostrar mensaje de error más amigable
-        setStats({
-          neumaticos: 0,
-          marcas: 0,
-          tiposVehiculo: 0,
-          medidas: 0
-        });
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchStats();
   }, []);
 
-  const StatCard = ({ title, value, icon, color }) => (
-    <div style={{
-      background: "rgba(255, 255, 255, 0.95)",
-      backdropFilter: "blur(20px)",
-      borderRadius: "16px",
-      padding: "24px",
-      boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-      border: "1px solid #e0f2fe",
-      flex: 1,
-      minWidth: "200px"
-    }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-        <div style={{ fontSize: "32px" }}>{icon}</div>
-        <div style={{
-          fontSize: "32px",
-          fontWeight: "800",
-          color: color
-        }}>
-          {loading ? "..." : value}
-        </div>
-      </div>
-      <div style={{
-        fontSize: "16px",
-        fontWeight: "600",
-        color: "#1e293b"
-      }}>
-        {title}
-      </div>
-    </div>
-  );
+  async function fetchStats() {
+    try {
+      const [neumaticosRes, marcasRes, tiposRes, medidasRes] = await Promise.all([
+        supabase.from("neumaticos").select("id", { count: "exact" }),
+        supabase.from("marcas").select("id", { count: "exact" }),
+        supabase.from("tipos_vehiculo").select("id", { count: "exact" }),
+        supabase.from("medidas").select("id", { count: "exact" })
+      ]);
+
+      setStats({
+        totalNeumaticos: neumaticosRes.count || 0,
+        totalMarcas: marcasRes.count || 0,
+        totalTipos: tiposRes.count || 0,
+        totalMedidas: medidasRes.count || 0
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) return <div>Cargando...</div>;
 
   return (
     <AdminLayout>
-      <div>
-        <div style={{ marginBottom: "32px" }}>
-          <h1 style={{
-            fontSize: "32px",
-            fontWeight: "800",
-            color: "#0ea5e9",
-            marginBottom: "8px"
-          }}>
-            Dashboard
-          </h1>
-          <p style={{ color: "#64748b", fontSize: "16px" }}>
-            Resumen general del sistema
-          </p>
-        </div>
-
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "24px",
-          marginBottom: "32px"
+      <div style={{ padding: "20px" }}>
+        <h1>Dashboard</h1>
+        
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
+          gap: "20px",
+          marginTop: "20px"
         }}>
-          <StatCard
-            title="Neumáticos"
-            value={stats.neumaticos}
-            icon="🚗"
-            color="#0ea5e9"
-          />
-          <StatCard
-            title="Marcas"
-            value={stats.marcas}
-            icon="🏷️"
-            color="#10b981"
-          />
-          <StatCard
-            title="Tipos de Vehículo"
-            value={stats.tiposVehiculo}
-            icon="🚙"
-            color="#f59e0b"
-          />
-        </div>
-
-        <div style={{
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(20px)",
-          borderRadius: "16px",
-          padding: "24px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          border: "1px solid #e0f2fe"
-        }}>
-          <h2 style={{
-            fontSize: "20px",
-            fontWeight: "700",
-            color: "#1e293b",
-            marginBottom: "16px"
-          }}>
-            Acciones Rápidas
-          </h2>
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "16px"
+            background: "#f0f9ff",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #bae6fd"
           }}>
-            <a
-              href="/admin/neumaticos"
-              style={{
-                display: "block",
-                padding: "16px",
-                background: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
-                color: "white",
-                borderRadius: "12px",
-                textDecoration: "none",
-                fontWeight: "600",
-                textAlign: "center",
-                transition: "transform 0.2s"
-              }}
-              onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
-              onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
-            >
-              ➕ Agregar Neumático
-            </a>
-            <a
-              href="/admin/marcas"
-              style={{
-                display: "block",
-                padding: "16px",
-                background: "linear-gradient(135deg, #10b981, #34d399)",
-                color: "white",
-                borderRadius: "12px",
-                textDecoration: "none",
-                fontWeight: "600",
-                textAlign: "center",
-                transition: "transform 0.2s"
-              }}
-              onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
-              onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
-            >
-              🏷️ Nueva Marca
-            </a>
-            <a
-              href="/admin/tipos-vehiculo"
-              style={{
-                display: "block",
-                padding: "16px",
-                background: "linear-gradient(135deg, #f59e0b, #fbbf24)",
-                color: "white",
-                borderRadius: "12px",
-                textDecoration: "none",
-                fontWeight: "600",
-                textAlign: "center",
-                transition: "transform 0.2s"
-              }}
-              onMouseEnter={(e) => e.target.style.transform = "translateY(-2px)"}
-              onMouseLeave={(e) => e.target.style.transform = "translateY(0)"}
-            >
-              🚙 Nuevo Tipo
-            </a>
+            <h3>Total Neumáticos</h3>
+            <p style={{ fontSize: "2rem", fontWeight: "bold", color: "#0ea5e9" }}>
+              {stats.totalNeumaticos}
+            </p>
+          </div>
+          
+          <div style={{
+            background: "#f0fdf4",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #bbf7d0"
+          }}>
+            <h3>Total Marcas</h3>
+            <p style={{ fontSize: "2rem", fontWeight: "bold", color: "#16a34a" }}>
+              {stats.totalMarcas}
+            </p>
+          </div>
+          
+          <div style={{
+            background: "#fef3c7",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #fde68a"
+          }}>
+            <h3>Total Tipos de Vehículo</h3>
+            <p style={{ fontSize: "2rem", fontWeight: "bold", color: "#d97706" }}>
+              {stats.totalTipos}
+            </p>
+          </div>
+          
+          <div style={{
+            background: "#f3e8ff",
+            padding: "20px",
+            borderRadius: "8px",
+            border: "1px solid #c4b5fd"
+          }}>
+            <h3>Total Medidas</h3>
+            <p style={{ fontSize: "2rem", fontWeight: "bold", color: "#7c3aed" }}>
+              {stats.totalMedidas}
+            </p>
           </div>
         </div>
       </div>

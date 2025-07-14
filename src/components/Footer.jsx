@@ -49,7 +49,7 @@ function Footer() {
               </li>
               <li>
                 <i className="fas fa-phone"></i>
-                <span>3573403958</span>
+                <span>+54 9 3573 403958</span>
               </li>
               <li>
                 <i className="fas fa-clock"></i>

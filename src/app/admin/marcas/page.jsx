@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AdminLayout from "../../../components/AdminLayout";
 import { supabase } from "../../../lib/supabaseClient";
 import NeumaticosPorMarca from '../../../components/NeumaticosPorMarca';
@@ -12,6 +12,8 @@ export default function MarcasPage() {
   const [formData, setFormData] = useState({ nombre: "", logo: "" });
   const [message, setMessage] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [expandedMarcaId, setExpandedMarcaId] = useState(null);
+  const fileInputRef = useRef();
 
   useEffect(() => {
     fetchMarcas();
@@ -105,17 +107,13 @@ export default function MarcasPage() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `logos/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      
       const { data, error } = await supabase.storage
-        .from("neumaticos")
+        .from("marcas")
         .upload(fileName, file);
-      
       if (error) throw error;
-      
       const { data: publicUrlData } = supabase.storage
-        .from("neumaticos")
+        .from("marcas")
         .getPublicUrl(fileName);
-      
       setFormData({ ...formData, logo: publicUrlData.publicUrl });
       setMessage("Logo subido correctamente");
     } catch (error) {
@@ -211,50 +209,80 @@ export default function MarcasPage() {
                   required
                 />
               </div>
-              <div
-                onDrop={handleDropLogo}
-                onDragOver={handleDragOverLogo}
-                style={{
-                  border: "2px dashed #e0f2fe",
-                  borderRadius: "8px",
-                  padding: "20px",
-                  textAlign: "center",
-                  background: uploadingLogo ? "#f3f4f6" : "#f8fafc",
-                  cursor: "pointer",
-                  marginBottom: "16px"
-                }}
-              >
-                {uploadingLogo ? (
-                  <div style={{ color: "#64748b" }}>Subiendo logo...</div>
-                ) : formData.logo ? (
-                  <div>
-                    <img
-                      src={formData.logo}
-                      alt="Logo Preview"
-                      style={{
-                        maxWidth: "100px",
-                        maxHeight: "60px",
-                        objectFit: "contain",
-                        marginBottom: "8px"
-                      }}
-                    />
-                    <div style={{ color: "#64748b", fontSize: "14px" }}>
-                      Arrastra un nuevo logo o selecciona un archivo
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ color: "#64748b" }}>
-                    Arrastra y suelta un logo aquí o selecciona un archivo
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "block", margin: "12px auto 0 auto" }}
-                  onChange={e => {
-                    if (e.target.files && e.target.files[0]) handleLogoUpload(e.target.files[0]);
+              <div style={{ marginBottom: "16px" }}>
+                <label style={{
+                  display: "block",
+                  marginBottom: "8px",
+                  fontWeight: "600",
+                  color: "#1e293b"
+                }}>
+                  Logo
+                </label>
+                <div
+                  onDrop={handleDropLogo}
+                  onDragOver={handleDragOverLogo}
+                  style={{
+                    border: "2px dashed #e0f2fe",
+                    borderRadius: "8px",
+                    padding: "20px",
+                    textAlign: "center",
+                    background: uploadingLogo ? "#f3f4f6" : "#f8fafc",
+                    cursor: "pointer"
                   }}
-                />
+                >
+                  {uploadingLogo ? (
+                    <div style={{ color: "#64748b" }}>Subiendo logo...</div>
+                  ) : formData.logo ? (
+                    <div>
+                      <img
+                        src={formData.logo}
+                        alt="Preview"
+                        style={{
+                          maxWidth: "200px",
+                          maxHeight: "120px",
+                          objectFit: "contain",
+                          marginBottom: "8px"
+                        }}
+                      />
+                      <div style={{ color: "#64748b", fontSize: "14px" }}>
+                        Arrastra un nuevo logo o usa el botón para seleccionar archivo
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ color: "#64748b" }}>
+                      Arrastra y suelta un logo aquí o usa el botón para seleccionar archivo
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                    style={{
+                      marginTop: 12,
+                      padding: "12px 24px",
+                      background: "#f1f5f9",
+                      color: "#64748b",
+                      border: "1.5px solid #e0e0e0",
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      fontSize: 16,
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8
+                    }}
+                  >
+                    <i className="fas fa-image"></i> Seleccionar logo...
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={e => {
+                      if (e.target.files && e.target.files[0]) handleLogoUpload(e.target.files[0]);
+                    }}
+                  />
+                </div>
               </div>
               <div style={{ display: "flex", gap: "12px" }}>
                 <button
@@ -362,10 +390,21 @@ export default function MarcasPage() {
                     background: "#f8fafc",
                     borderRadius: "12px",
                     padding: "20px",
-                    border: "1px solid #e0f2fe"
+                    border: "1px solid #e0f2fe",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start",
+                    cursor: "pointer",
+                    position: "relative"
+                  }}
+                  onClick={e => {
+                    // Evitar que el click en los botones Editar/Eliminar dispare el toggle
+                    if (e.target.closest('button')) return;
+                    setExpandedMarcaId(expandedMarcaId === marca.id ? null : marca.id);
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                  <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                     <h3 style={{
                       fontSize: "18px",
                       fontWeight: "700",
@@ -375,7 +414,7 @@ export default function MarcasPage() {
                     </h3>
                     <div style={{ display: "flex", gap: "8px" }}>
                       <button
-                        onClick={() => handleEdit(marca)}
+                        onClick={e => { e.stopPropagation(); handleEdit(marca); }}
                         style={{
                           padding: "6px 12px",
                           background: "#e0f2fe",
@@ -390,7 +429,7 @@ export default function MarcasPage() {
                         ✏️ Editar
                       </button>
                       <button
-                        onClick={() => handleDelete(marca.id)}
+                        onClick={e => { e.stopPropagation(); handleDelete(marca.id); }}
                         style={{
                           padding: "6px 12px",
                           background: "#fef2f2",
@@ -417,6 +456,22 @@ export default function MarcasPage() {
                           objectFit: "contain"
                         }}
                       />
+                    </div>
+                  )}
+                  {expandedMarcaId === marca.id && (
+                    <div
+                      style={{
+                        marginTop: 16,
+                        width: '100%',
+                        background: '#fff',
+                        borderRadius: '8px',
+                        padding: '0',
+                        boxSizing: 'border-box',
+                        boxShadow: 'none',
+                        border: 'none',
+                      }}
+                    >
+                      <NeumaticosPorMarca marcaId={marca.id} />
                     </div>
                   )}
                 </div>

@@ -11,6 +11,7 @@ export default function TiposVehiculoPage() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ nombre: "" });
   const [message, setMessage] = useState("");
+  const [expandedTipoId, setExpandedTipoId] = useState(null);
 
   useEffect(() => {
     fetchTiposVehiculo();
@@ -76,17 +77,28 @@ export default function TiposVehiculoPage() {
   const handleDelete = async (id) => {
     if (!confirm("¿Estás seguro de que quieres eliminar este tipo de vehículo?")) return;
 
+    setMessage("");
     try {
+      // Verificar si existen neumáticos asociados a este tipo
+      const { data: neumaticosAsociados, error: errorCheck } = await supabase
+        .from("neumaticos")
+        .select("id")
+        .eq("tipo_id", id);
+      if (errorCheck) throw errorCheck;
+      if (neumaticosAsociados && neumaticosAsociados.length > 0) {
+        setMessage("No se puede eliminar este tipo de vehículo porque existen neumáticos asociados. Elimina o reasigna esos neumáticos antes de intentar borrar el tipo.");
+        return;
+      }
+      // Si no hay neumáticos asociados, proceder con el borrado
       const { error } = await supabase
         .from("tipos_vehiculo")
         .delete()
         .eq("id", id);
-      
       if (error) throw error;
       setMessage("Tipo de vehículo eliminado correctamente");
       fetchTiposVehiculo();
     } catch (error) {
-      console.error("Error deleting tipo_vehiculo:", error);
+      console.error("Error deleting tipo_vehiculo:", error, error?.message, error?.details, JSON.stringify(error, null, 2));
       setMessage("Error al eliminar el tipo de vehículo");
     }
   };
@@ -267,8 +279,8 @@ export default function TiposVehiculoPage() {
             </div>
           ) : (
             <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+              display: "flex",
+              flexWrap: "wrap",
               gap: "16px"
             }}>
               {tiposVehiculo.map((tipo) => (
@@ -280,11 +292,23 @@ export default function TiposVehiculoPage() {
                     padding: "20px",
                     border: "1px solid #e0f2fe",
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                    alignItems: "flex-start",
+                    cursor: "pointer",
+                    position: "relative",
+                    minWidth: 250,
+                    maxWidth: 340,
+                    flex: '1 1 250px',
+                    boxSizing: 'border-box',
+                  }}
+                  onClick={e => {
+                    // Evitar que el click en los botones Editar/Eliminar dispare el toggle
+                    if (e.target.closest('button')) return;
+                    setExpandedTipoId(expandedTipoId === tipo.id ? null : tipo.id);
                   }}
                 >
-                  <div>
+                  <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <h3 style={{
                       fontSize: "18px",
                       fontWeight: "700",
@@ -292,39 +316,55 @@ export default function TiposVehiculoPage() {
                     }}>
                       {tipo.nombre}
                     </h3>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleEdit(tipo); }}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#e0f2fe",
+                          color: "#0ea5e9",
+                          border: "1px solid #bae6fd",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={e => { e.stopPropagation(); handleDelete(tipo.id); }}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          border: "1px solid #fecaca",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      onClick={() => handleEdit(tipo)}
+                  {expandedTipoId === tipo.id && (
+                    <div
                       style={{
-                        padding: "6px 12px",
-                        background: "#e0f2fe",
-                        color: "#0ea5e9",
-                        border: "1px solid #bae6fd",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer"
+                        marginTop: 16,
+                        width: '100%',
+                        background: '#fff',
+                        borderRadius: '8px',
+                        padding: '0',
+                        boxSizing: 'border-box',
+                        boxShadow: 'none',
+                        border: 'none',
                       }}
                     >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(tipo.id)}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#fef2f2",
-                        color: "#dc2626",
-                        border: "1px solid #fecaca",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                      }}
-                    >
-                      🗑️ Eliminar
-                    </button>
-                  </div>
+                      <NeumaticosPorTipo tipoId={tipo.id} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

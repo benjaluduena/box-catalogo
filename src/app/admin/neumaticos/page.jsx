@@ -28,6 +28,9 @@ export default function NeumaticosPage() {
   const fileInputRef = useRef();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mustAddMedida, setMustAddMedida] = useState(false);
+  const [newNeumaticoId, setNewNeumaticoId] = useState(null);
+  const [medidasCount, setMedidasCount] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -88,16 +91,21 @@ export default function NeumaticosPage() {
           .from("neumaticos")
           .update(neumaticoData)
           .eq("id", editingId);
-        
         if (error) throw error;
         setMessage("Neumático actualizado correctamente");
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from("neumaticos")
-          .insert(neumaticoData);
-        
+          .insert(neumaticoData)
+          .select('id')
+          .single();
         if (error) throw error;
-        setMessage("Neumático creado correctamente");
+        setMessage("Neumático creado correctamente. Ahora debes agregar al menos una medida.");
+        setMustAddMedida(true);
+        setNewNeumaticoId(data.id);
+        setEditingId(data.id);
+        setShowForm(true);
+        return; // No limpiar el form ni recargar lista hasta que se agregue medida
       }
 
       resetForm();
@@ -105,6 +113,29 @@ export default function NeumaticosPage() {
     } catch (error) {
       console.error("Error saving neumatico:", error);
       setMessage("Error al guardar el neumático");
+    }
+  };
+
+  // Función para contar medidas del neumático actual
+  const checkMedidasCount = async (neumaticoId) => {
+    const { data, error } = await supabase
+      .from('medidas')
+      .select('id', { count: 'exact' })
+      .eq('neumatico_id', neumaticoId);
+    if (!error) setMedidasCount(data.length);
+  };
+
+  // Efecto para chequear medidas cuando se crea un nuevo neumático
+  useEffect(() => {
+    if (mustAddMedida && newNeumaticoId) {
+      checkMedidasCount(newNeumaticoId);
+    }
+  }, [mustAddMedida, newNeumaticoId]);
+
+  // Handler para cuando se agrega una medida (llamado desde MedidasInline)
+  const handleMedidasChange = async () => {
+    if (newNeumaticoId) {
+      await checkMedidasCount(newNeumaticoId);
     }
   };
 
@@ -528,7 +559,7 @@ export default function NeumaticosPage() {
                     cursor: "pointer"
                   }}
                 >
-                  {editingId ? "Actualizar" : "Crear"}
+                  {editingId && !mustAddMedida ? "Actualizar" : "Crear"}
                 </button>
                 <button
                   type="button"
@@ -540,26 +571,52 @@ export default function NeumaticosPage() {
                     border: "1px solid #e2e8f0",
                     borderRadius: "8px",
                     fontWeight: "600",
-                    cursor: "pointer"
+                    cursor: mustAddMedida && medidasCount === 0 ? "not-allowed" : "pointer",
+                    opacity: mustAddMedida && medidasCount === 0 ? 0.5 : 1
                   }}
+                  disabled={mustAddMedida && medidasCount === 0}
                 >
                   Cancelar
                 </button>
               </div>
             </form>
+            {mustAddMedida && (
+              <div style={{
+                marginTop: 24,
+                padding: 16,
+                background: "#fef9c3",
+                border: "1px solid #fde68a",
+                borderRadius: 8,
+                color: "#b45309",
+                fontWeight: 600,
+                fontSize: 16
+              }}>
+                Debes agregar al menos una medida para este neumático antes de continuar.
+              </div>
+            )}
+            {editingId && (
+              <div style={{ marginTop: "32px" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0ea5e9", marginBottom: "12px" }}>
+                  Medidas del Neumático
+                </h3>
+                <MedidasInline neumaticoId={editingId} onChange={mustAddMedida ? handleMedidasChange : undefined} />
+              </div>
+            )}
           </div>
         )}
 
-        <div style={{ marginTop: "32px" }}>
-          <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0ea5e9", marginBottom: "12px" }}>
-            Medidas del Neumático
-          </h3>
-          {/* Listado y gestión inline de medidas asociadas al neumático actual */}
-          {/* Mostrar solo si editingId o si se acaba de crear un neumático */}
-          {editingId && (
-            <MedidasInline neumaticoId={editingId} />
-          )}
-        </div>
+        {!showForm && (
+          <div style={{ marginTop: "32px" }}>
+            <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#0ea5e9", marginBottom: "12px" }}>
+              Medidas del Neumático
+            </h3>
+            {/* Listado y gestión inline de medidas asociadas al neumático actual */}
+            {/* Mostrar solo si editingId o si se acaba de crear un neumático */}
+            {editingId && (
+              <MedidasInline neumaticoId={editingId} />
+            )}
+          </div>
+        )}
 
         {/* Bloque de Neumáticos Existentes */}
         <div style={{

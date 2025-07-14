@@ -30,9 +30,9 @@ const Header = () => {
     <header>
       <div className="container">
         <div className="header-content">
-          <div className="logo">
+          <Link href="/#inicio" scroll={true} className="logo" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
             BOX<span>NEUMATICOS</span>
-          </div>
+          </Link>
           <nav>
             <ul>
               <li><Link href="/#inicio" scroll={true}>Inicio</Link></li>

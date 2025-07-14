@@ -32,6 +32,10 @@ export default function NeumaticoDetallePage() {
   if (loading) return <p style={{ textAlign: "center" }}>Cargando neumático...</p>;
   if (!neumatico) return <p style={{ textAlign: "center" }}>Neumático no encontrado.</p>;
 
+  // Formateo de precios con puntos
+  const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
+  const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
+
   const handleCantidad = (delta) => {
     setCantidad((prev) => {
       const nueva = prev + delta;
@@ -75,6 +79,37 @@ export default function NeumaticoDetallePage() {
         minHeight: 480,
         border: "1.5px solid #e0f2fe"
       }}>
+        {/* Logo de la marca arriba a la derecha */}
+        <style>{`
+          @media (max-width: 768px) {
+            .marca-logo-detalle {
+              top: 10px !important;
+              right: 10px !important;
+              width: 48px !important;
+              height: 48px !important;
+            }
+          }
+        `}</style>
+        {neumatico.marcas?.logo && (
+          <img
+            src={neumatico.marcas.logo}
+            alt={neumatico.marcas.nombre}
+            className="marca-logo-detalle"
+            style={{
+              position: "absolute",
+              top: 24,
+              right: 32,
+              width: 64,
+              height: 64,
+              objectFit: "contain",
+              background: "#fff",
+              borderRadius: 16,
+              border: "1.5px solid #e0f2fe",
+              boxShadow: "0 2px 8px rgba(14,165,233,0.10)",
+              zIndex: 3
+            }}
+          />
+        )}
         <button onClick={() => router.back()} style={{
           position: "absolute",
           top: 24,
@@ -108,9 +143,9 @@ export default function NeumaticoDetallePage() {
           <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 10, color: "#0ea5e9", lineHeight: 1.1 }}>{neumatico.nombre}</h2>
           <div style={{ color: "#1e293b", fontSize: 18, marginBottom: 12, fontWeight: 600 }}>{neumatico.marcas?.nombre}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 16 }}>
-            <span style={{ fontWeight: 800, fontSize: 28, color: "#171717" }}>${neumatico.precio}</span>
+            <span style={{ fontWeight: 800, fontSize: 28, color: "#171717" }}>${precioFormateado}</span>
             {neumatico.precio_anterior && (
-              <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: 20, fontWeight: 600 }}>${neumatico.precio_anterior}</span>
+              <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: 20, fontWeight: 600 }}>${precioAnteriorFormateado}</span>
             )}
           </div>
           <div style={{ fontSize: 16, color: "#64748b", marginBottom: 22, minHeight: 40 }}>{neumatico.descripcion}</div>

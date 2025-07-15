@@ -138,10 +138,17 @@ export default function MarcasPage() {
 
   return (
     <AdminLayout>
+      <style>{`
+          @media (max-width: 700px) {
+            .titulo-admin-neumaticos {
+              padding-left: 54px !important;
+            }
+          }
+        `}</style>
       <div>
         <div style={{ marginBottom: "32px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h1 style={{
+            <h1 className="titulo-admin-neumaticos" style={{
               fontSize: "32px",
               fontWeight: "800",
               color: "#0ea5e9"

@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "../lib/auth";
+import { supabase } from "../lib/supabaseClient";
+import bcrypt from "bcryptjs";
 
 export default function AdminLogin() {
   const [password, setPassword] = useState("");
@@ -13,19 +14,19 @@ export default function AdminLogin() {
   const [lockoutTime, setLockoutTime] = useState(0);
   const router = useRouter();
 
+  const MAX_LOGIN_ATTEMPTS = 5;
+  const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutos
+  const ADMIN_TOKEN = "box-admin-2024-secure-token";
+
   useEffect(() => {
     // Verificar estado de bloqueo al cargar
-    const attempts = auth.getLoginAttempts();
-    const lockedOut = auth.isLockedOut();
+    const attempts = parseInt(localStorage.getItem("adminLoginAttempts") || "0");
+    const lockoutUntil = localStorage.getItem("adminLockoutUntil");
     setLoginAttempts(attempts);
-    setIsLockedOut(lockedOut);
-    
-    if (lockedOut) {
-      const lockoutUntil = localStorage.getItem('adminLockoutUntil');
-      if (lockoutUntil) {
-        const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
-        setLockoutTime(remaining);
-      }
+    if (lockoutUntil && Date.now() < parseInt(lockoutUntil)) {
+      setIsLockedOut(true);
+      const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
+      setLockoutTime(remaining);
     }
   }, []);
 
@@ -33,26 +34,57 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    
+
+    // Verificar si está bloqueado
+    const lockoutUntil = localStorage.getItem("adminLockoutUntil");
+    if (lockoutUntil && Date.now() < parseInt(lockoutUntil)) {
+      setIsLockedOut(true);
+      const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
+      setLockoutTime(remaining);
+      setLoading(false);
+      return;
+    }
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (auth.login(password)) {
+      // Obtener el hash de la tabla admin
+      const { data, error: dbError } = await supabase
+        .from("admin")
+        .select("password_hash")
+        .limit(1)
+        .single();
+      if (dbError || !data) {
+        setError("Error de autenticación. Contacta al administrador.");
+        setLoading(false);
+        return;
+      }
+      const hash = data.password_hash;
+      const match = await bcrypt.compare(password, hash);
+      if (match) {
+        // Resetear contador de intentos fallidos
+        localStorage.removeItem("adminLoginAttempts");
+        localStorage.removeItem("adminLockoutUntil");
+        // Guardar token y tiempo de login
+        localStorage.setItem("adminToken", ADMIN_TOKEN);
+        localStorage.setItem("adminLoginTime", Date.now().toString());
         router.push("/admin/dashboard");
       } else {
-        const attempts = auth.getLoginAttempts();
+        // Incrementar contador de intentos fallidos
+        const attempts = parseInt(localStorage.getItem("adminLoginAttempts") || "0") + 1;
+        localStorage.setItem("adminLoginAttempts", attempts.toString());
         setLoginAttempts(attempts);
-        const remainingAttempts = 5 - attempts;
-        setError(`Contraseña incorrecta. Intentos restantes: ${remainingAttempts}`);
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockoutTime = Date.now() + LOCKOUT_TIME;
+          localStorage.setItem("adminLockoutUntil", lockoutTime.toString());
+          setIsLockedOut(true);
+          setLockoutTime(Math.ceil(LOCKOUT_TIME / 1000 / 60));
+          setError("Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.");
+        } else {
+          const remainingAttempts = MAX_LOGIN_ATTEMPTS - attempts;
+          setError(`Contraseña incorrecta. Intentos restantes: ${remainingAttempts}`);
+        }
       }
-    } catch (error) {
-      setError(error.message);
-      setIsLockedOut(true);
-      const lockoutUntil = localStorage.getItem('adminLockoutUntil');
-      if (lockoutUntil) {
-        const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
-        setLockoutTime(remaining);
-      }
+    } catch (err) {
+      setError("Error de autenticación. Intenta de nuevo más tarde.");
     } finally {
       setLoading(false);
     }

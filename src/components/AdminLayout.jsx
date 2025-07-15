@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth } from "../lib/auth";
 
 export default function AdminLayout({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,42 +11,39 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      const authenticated = auth.isAuthenticated();
-      setIsAuthenticated(authenticated);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+      setIsAuthenticated(!!token);
       setLoading(false);
-      
-      if (!authenticated) {
+      if (!token) {
         router.push("/admin");
       }
     };
-
     checkAuth();
-
     // Verificar sesión cada 5 minutos
     const sessionCheck = setInterval(() => {
-      if (auth.isAuthenticated()) {
-        const loginTime = localStorage.getItem('adminLoginTime');
-        if (loginTime) {
-          const now = Date.now();
-          const sessionTime = 24 * 60 * 60 * 1000; // 24 horas
-          const timeLeft = sessionTime - (now - parseInt(loginTime));
-          
-          // Mostrar advertencia cuando queden menos de 30 minutos
-          if (timeLeft < 30 * 60 * 1000 && timeLeft > 0) {
-            setSessionWarning(true);
-          } else if (timeLeft <= 0) {
-            auth.logout();
-            router.push("/admin");
-          }
+      const loginTime = typeof window !== 'undefined' ? localStorage.getItem('adminLoginTime') : null;
+      if (loginTime) {
+        const now = Date.now();
+        const sessionTime = 24 * 60 * 60 * 1000; // 24 horas
+        const timeLeft = sessionTime - (now - parseInt(loginTime));
+        // Mostrar advertencia cuando queden menos de 30 minutos
+        if (timeLeft < 30 * 60 * 1000 && timeLeft > 0) {
+          setSessionWarning(true);
+        } else if (timeLeft <= 0) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminLoginTime');
+          router.push("/admin");
         }
       }
     }, 5 * 60 * 1000); // 5 minutos
-
     return () => clearInterval(sessionCheck);
   }, [router]);
 
   const handleLogout = () => {
-    auth.logout();
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminLoginTime');
+    localStorage.removeItem('adminLoginAttempts');
+    localStorage.removeItem('adminLockoutUntil');
     router.push("/admin");
   };
 
@@ -74,7 +70,6 @@ export default function AdminLayout({ children }) {
       </div>
     );
   }
-
   if (!isAuthenticated) {
     return null; // El router ya redirigió
   }
@@ -102,27 +97,29 @@ export default function AdminLayout({ children }) {
           }
           .hamburger-btn {
             display: flex !important;
-            position: fixed !important;
-            top: 16px !important;
-            left: 16px !important;
-            z-index: 300 !important;
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 50% !important;
-            background: #fff !important;
-            box-shadow: 0 4px 16px rgba(30,41,59,0.12) !important;
-            align-items: center !important;
+            flex-direction: column !important;
             justify-content: center !important;
+            align-items: center !important;
+            gap: 6px !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 300 !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
             border: none !important;
             padding: 0 !important;
           }
           .hamburger-btn span {
+            display: block !important;
             width: 28px !important;
             height: 3px !important;
             background: #0ea5e9 !important;
-            margin: 5px 0 !important;
             border-radius: 2px !important;
-            display: block !important;
+            transition: all 0.2s;
           }
         }
         .sidebar-admin-drawer > div {
@@ -148,7 +145,7 @@ export default function AdminLayout({ children }) {
       <button
         className="hamburger-btn"
         aria-label="Abrir menú"
-        onClick={() => setIsSidebarOpen(true)}
+        onClick={() => setIsSidebarOpen(open => !open)}
         style={{
           // El estilo principal ahora lo maneja la media query
           display: "none"
@@ -179,7 +176,6 @@ export default function AdminLayout({ children }) {
         }}
       >
         {/* ...sidebar content... */}
-        {/*** COPIAR AQUÍ EL CONTENIDO DEL SIDEBAR COMO ANTES ***/}
         <SidebarContent />
       </div>
       {/* Sidebar drawer (mobile) */}

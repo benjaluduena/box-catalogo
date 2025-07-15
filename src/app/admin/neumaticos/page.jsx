@@ -31,6 +31,10 @@ export default function NeumaticosPage() {
   const [mustAddMedida, setMustAddMedida] = useState(false);
   const [newNeumaticoId, setNewNeumaticoId] = useState(null);
   const [medidasCount, setMedidasCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const [filterMarca, setFilterMarca] = useState("");
+  const [filterTipo, setFilterTipo] = useState("");
+  const [searchMedida, setSearchMedida] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -49,7 +53,7 @@ export default function NeumaticosPage() {
 
   async function fetchData() {
     try {
-      const [neumaticosRes, marcasRes, tiposRes] = await Promise.all([
+      const [neumaticosRes, marcasRes, tiposRes, medidasRes] = await Promise.all([
         supabase
           .from("neumaticos")
           .select(`
@@ -58,11 +62,23 @@ export default function NeumaticosPage() {
             tipos_vehiculo(nombre)
           `)
           .order("created_at", { ascending: false }),
-        supabase.from("marcas").select("*").order("nombre"),
-        supabase.from("tipos_vehiculo").select("*").order("nombre")
+        supabase.from("marcas").select("*"),
+        supabase.from("tipos_vehiculo").select("*"),
+        supabase.from("medidas").select("id, medida, neumatico_id")
       ]);
 
-      setNeumaticos(neumaticosRes.data || []);
+      // Asociar medidas a cada neumático
+      const medidasPorNeumatico = {};
+      (medidasRes.data || []).forEach(m => {
+        if (!medidasPorNeumatico[m.neumatico_id]) medidasPorNeumatico[m.neumatico_id] = [];
+        medidasPorNeumatico[m.neumatico_id].push(m.medida);
+      });
+      const neumaticosConMedidas = (neumaticosRes.data || []).map(n => ({
+        ...n,
+        medidas: medidasPorNeumatico[n.id] || []
+      }));
+
+      setNeumaticos(neumaticosConMedidas);
       setMarcas(marcasRes.data || []);
       setTiposVehiculo(tiposRes.data || []);
     } catch (error) {
@@ -189,6 +205,12 @@ export default function NeumaticosPage() {
     });
     setEditingId(neumatico.id);
     setShowForm(true);
+    // Scroll hacia arriba para mostrar el formulario
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleDelete = async (id) => {
@@ -226,12 +248,17 @@ export default function NeumaticosPage() {
     setMessage(""); // Limpiar mensaje
   };
 
+  // Función utilitaria para quitar tildes/acentos
+  function normalize(str) {
+    return (str || "").normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+  }
+
   return (
     <AdminLayout>
       <div>
         <div style={{ marginBottom: "32px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h1 style={{
+            <h1 className="titulo-admin-neumaticos" style={{
               fontSize: "32px",
               fontWeight: "800",
               color: "#0ea5e9"
@@ -287,7 +314,7 @@ export default function NeumaticosPage() {
             marginBottom: "24px",
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             border: "1px solid #e0f2fe"
-          }}>
+          }} className="formulario-admin-neumatico">
             <h2 style={{
               fontSize: "20px",
               fontWeight: "700",
@@ -619,6 +646,48 @@ export default function NeumaticosPage() {
         )}
 
         {/* Bloque de Neumáticos Existentes */}
+        <style>{`
+          @media (max-width: 700px) {
+            .neumaticos-grid-admin {
+              display: flex !important;
+              flex-direction: column !important;
+              gap: 12px !important;
+            }
+            .filtros-admin {
+              flex-direction: column !important;
+              gap: 10px !important;
+            }
+            .filtros-admin > * {
+              min-width: 0 !important;
+              width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            .nuevo-btn-admin {
+              width: 100% !important;
+              margin-top: 8px !important;
+            }
+            .recuadro-admin {
+              padding: 10px !important;
+            }
+            .tarjeta-neumatico-admin {
+              padding: 12px !important;
+            }
+            .formulario-admin-neumatico {
+              padding: 10px !important;
+              margin-bottom: 18px !important;
+            }
+            .formulario-admin-neumatico input,
+            .formulario-admin-neumatico textarea,
+            .formulario-admin-neumatico select {
+              width: 100% !important;
+              min-width: 0 !important;
+              box-sizing: border-box !important;
+            }
+            .titulo-admin-neumaticos {
+              padding-left: 54px !important;
+            }
+          }
+        `}</style>
         <div style={{
           background: "rgba(255, 255, 255, 0.95)",
           backdropFilter: "blur(20px)",
@@ -627,8 +696,8 @@ export default function NeumaticosPage() {
           boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
           border: "1px solid #e0f2fe",
           marginBottom: "32px"
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+        }} className="recuadro-admin">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: 12 }}>
             <h2 style={{
               fontSize: "24px",
               fontWeight: "700",
@@ -654,11 +723,74 @@ export default function NeumaticosPage() {
                 boxShadow: "0 2px 8px rgba(14,165,233,0.08)",
                 transition: "all 0.2s"
               }}
+              className="nuevo-btn-admin"
             >
               <span style={{ fontSize: 18, fontWeight: 700 }}>➕</span> Nuevo Neumático
             </button>
           </div>
-          
+          {/* Buscador y filtros */}
+          <div className="filtros-admin" style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, marca o tipo..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                flex: 1,
+                minWidth: 180,
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "1.5px solid #e0f2fe",
+                fontSize: 16
+              }}
+            />
+            <input
+              type="text"
+              placeholder="Buscar por medida..."
+              value={searchMedida}
+              onChange={e => setSearchMedida(e.target.value)}
+              style={{
+                minWidth: 180,
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "1.5px solid #e0f2fe",
+                fontSize: 16
+              }}
+            />
+            <select
+              value={filterMarca}
+              onChange={e => setFilterMarca(e.target.value)}
+              style={{
+                minWidth: 140,
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "1.5px solid #e0f2fe",
+                fontSize: 16
+              }}
+            >
+              <option value="">Todas las marcas</option>
+              {marcas.map(m => (
+                <option key={m.id} value={m.id}>{m.nombre}</option>
+              ))}
+            </select>
+            <select
+              value={filterTipo}
+              onChange={e => setFilterTipo(e.target.value)}
+              style={{
+                minWidth: 140,
+                padding: "10px 16px",
+                borderRadius: 8,
+                border: "1.5px solid #e0f2fe",
+                fontSize: 16
+              }}
+            >
+              <option value="">Todos los tipos</option>
+              {tiposVehiculo.map(t => (
+                <option key={t.id} value={t.id}>{t.nombre}</option>
+              ))}
+            </select>
+          </div>
+          {/* Lista filtrada de neumáticos */}
           {loading ? (
             <div style={{ textAlign: "center", padding: "40px", color: "#64748b" }}>
               Cargando neumáticos...
@@ -668,125 +800,153 @@ export default function NeumaticosPage() {
               No hay neumáticos registrados
             </div>
           ) : (
-            <div style={{
+            <div className="neumaticos-grid-admin" style={{
               display: "grid",
               gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
               gap: "16px"
             }}>
-              {neumaticos.map((neumatico) => (
-                <div
-                  key={neumatico.id}
-                  style={{
-                    background: "#f8fafc",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    border: "1px solid #e0f2fe"
-                  }}
-                >
-                  <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
-                    {neumatico.imagen && (
-                      <img
-                        src={neumatico.imagen}
-                        alt={neumatico.nombre}
-                        style={{
-                          width: "80px",
-                          height: "80px",
-                          objectFit: "contain",
-                          borderRadius: "8px",
-                          background: "white"
-                        }}
-                      />
-                    )}
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{
-                        fontSize: "18px",
-                        fontWeight: "700",
-                        color: "#1e293b",
-                        marginBottom: "4px"
-                      }}>
-                        {neumatico.nombre}
-                      </h3>
-                      <div style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
-                        {neumatico.marcas?.nombre} • {neumatico.tipos_vehiculo?.nombre}
-                      </div>
-                      <div style={{ fontWeight: "700", color: "#0ea5e9", fontSize: "16px" }}>
-                        ${neumatico.precio}
-                        {neumatico.precio_anterior && (
-                          <span style={{
-                            textDecoration: "line-through",
-                            color: "#94a3b8",
-                            marginLeft: "8px",
-                            fontWeight: "500"
-                          }}>
-                            ${neumatico.precio_anterior}
-                          </span>
+              {neumaticos
+                .filter(n => {
+                  // Búsqueda combinada por palabras en nombre, marca, tipo y medidas (insensible a tildes)
+                  const palabras = normalize(search).split(/\s+/).filter(Boolean);
+                  const nombre = normalize(n.nombre);
+                  const marca = normalize(n.marcas?.nombre);
+                  const tipo = normalize(n.tipos_vehiculo?.nombre);
+                  const medidas = (n.medidas || []).map(m => normalize(m));
+                  // Cada palabra debe estar en alguno de los campos
+                  const matchPalabras = palabras.every(palabra =>
+                    nombre.includes(palabra) ||
+                    marca.includes(palabra) ||
+                    tipo.includes(palabra)
+                  );
+                  // Filtro por medida (coincidencia parcial, insensible a tildes)
+                  const medidaBuscada = normalize(searchMedida);
+                  const matchMedida = !medidaBuscada || medidas.some(m => m.includes(medidaBuscada));
+                  // Filtros de combo
+                  const matchMarca = !filterMarca || n.marca_id == filterMarca;
+                  const matchTipo = !filterTipo || n.tipo_id == filterTipo;
+                  return matchPalabras && matchMedida && matchMarca && matchTipo;
+                })
+                .map((neumatico) => (
+                  <div
+                    key={neumatico.id}
+                    style={{
+                      background: "#f8fafc",
+                      borderRadius: "12px",
+                      padding: "20px",
+                      border: "1px solid #e0f2fe"
+                    }}
+                    className="tarjeta-neumatico-admin"
+                  >
+                    <div style={{ display: "flex", gap: "16px", marginBottom: "12px" }}>
+                      {neumatico.imagen && (
+                        <img
+                          src={neumatico.imagen}
+                          alt={neumatico.nombre}
+                          style={{
+                            width: "80px",
+                            height: "80px",
+                            objectFit: "contain",
+                            borderRadius: "8px",
+                            background: "white"
+                          }}
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{
+                          fontSize: "18px",
+                          fontWeight: "700",
+                          color: "#1e293b",
+                          marginBottom: "4px"
+                        }}>
+                          {neumatico.nombre}
+                        </h3>
+                        <div style={{ color: "#64748b", fontSize: "14px", marginBottom: "8px" }}>
+                          {neumatico.marcas?.nombre} • {neumatico.tipos_vehiculo?.nombre}
+                        </div>
+                        <div style={{ fontWeight: "700", color: "#0ea5e9", fontSize: "16px" }}>
+                          ${neumatico.precio}
+                          {neumatico.precio_anterior && (
+                            <span style={{
+                              textDecoration: "line-through",
+                              color: "#94a3b8",
+                              marginLeft: "8px",
+                              fontWeight: "500"
+                            }}>
+                              ${neumatico.precio_anterior}
+                            </span>
+                          )}
+                        </div>
+                        {/* Mostrar medidas asociadas */}
+                        {neumatico.medidas && neumatico.medidas.length > 0 && (
+                          <div style={{ color: "#0ea5e9", fontSize: 13, marginTop: 6 }}>
+                            Medidas: {neumatico.medidas.join(", ")}
+                          </div>
                         )}
                       </div>
                     </div>
+                    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+                      {(neumatico.mas_vendido || neumatico.destacado) && (
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          {neumatico.mas_vendido && (
+                            <span style={{
+                              background: "#fbbf24",
+                              color: "#92400e",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                              fontWeight: "600"
+                            }}>
+                              Más Vendido
+                            </span>
+                          )}
+                          {neumatico.destacado && (
+                            <span style={{
+                              background: "#10b981",
+                              color: "white",
+                              padding: "2px 8px",
+                              borderRadius: "4px",
+                              fontSize: "12px",
+                              fontWeight: "600"
+                            }}>
+                              Destacado
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => handleEdit(neumatico)}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#e0f2fe",
+                          color: "#0ea5e9",
+                          border: "1px solid #bae6fd",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(neumatico.id)}
+                        style={{
+                          padding: "6px 12px",
+                          background: "#fef2f2",
+                          color: "#dc2626",
+                          border: "1px solid #fecaca",
+                          borderRadius: "6px",
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    </div>
                   </div>
-                  
-                  <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                    {(neumatico.mas_vendido || neumatico.destacado) && (
-                      <div style={{ display: "flex", gap: "4px" }}>
-                        {neumatico.mas_vendido && (
-                          <span style={{
-                            background: "#fbbf24",
-                            color: "#92400e",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            fontWeight: "600"
-                          }}>
-                            Más Vendido
-                          </span>
-                        )}
-                        {neumatico.destacado && (
-                          <span style={{
-                            background: "#10b981",
-                            color: "white",
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            fontSize: "12px",
-                            fontWeight: "600"
-                          }}>
-                            Destacado
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <button
-                      onClick={() => handleEdit(neumatico)}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#e0f2fe",
-                        color: "#0ea5e9",
-                        border: "1px solid #bae6fd",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                      }}
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(neumatico.id)}
-                      style={{
-                        padding: "6px 12px",
-                        background: "#fef2f2",
-                        color: "#dc2626",
-                        border: "1px solid #fecaca",
-                        borderRadius: "6px",
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        cursor: "pointer"
-                      }}
-                    >
-                      🗑️ Eliminar
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>

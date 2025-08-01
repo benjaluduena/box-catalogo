@@ -62,6 +62,68 @@ function NeumaticoCard({ neumatico, onClick }) {
   );
 }
 
+// Componente para indicadores de deslizamiento
+function SwipeIndicator({ totalItems, currentIndex, onDotClick }) {
+  if (totalItems <= 1) return null;
+  
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 16,
+      padding: '8px 0'
+    }}>
+      {Array.from({ length: totalItems }).map((_, index) => (
+        <button
+          key={index}
+          onClick={() => onDotClick?.(index)}
+          style={{
+            width: currentIndex === index ? 24 : 8,
+            height: 8,
+            borderRadius: 4,
+            border: 'none',
+            background: currentIndex === index ? '#0ea5e9' : '#cbd5e1',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            padding: 0
+          }}
+          aria-label={`Ir al producto ${index + 1}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Componente para mostrar texto de ayuda de deslizamiento
+function SwipeHint({ show }) {
+  if (!show) return null;
+  
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      color: '#64748b',
+      fontSize: 14,
+      fontWeight: 500,
+      marginBottom: 12,
+      padding: '8px 16px',
+      background: '#f1f5f9',
+      borderRadius: 20,
+      margin: '0 auto 16px auto',
+      width: 'fit-content',
+      animation: 'fadeInSlide 0.5s ease-out'
+    }}>
+      <i className="fas fa-hand-pointer" style={{ fontSize: 16, color: '#0ea5e9' }}></i>
+      Desliza para ver más productos
+      <i className="fas fa-arrow-right" style={{ fontSize: 14, marginLeft: 4, animation: 'slideRight 2s infinite' }}></i>
+    </div>
+  );
+}
+
 function CatalogoNeumaticos() {
   const [tiposVehiculo, setTiposVehiculo] = useState([]);
   const [neumaticosPorTipo, setNeumaticosPorTipo] = useState({});
@@ -69,6 +131,8 @@ function CatalogoNeumaticos() {
   const router = useRouter();
   const [categoriasExpandidas, setCategoriasExpandidas] = useState([]);
   const [destacados, setDestacados] = useState([]);
+  const [currentIndexes, setCurrentIndexes] = useState({});
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
 
   useEffect(() => {
     async function fetchTiposYNeumaticos() {
@@ -110,6 +174,13 @@ function CatalogoNeumaticos() {
       setLoading(false);
     }
     fetchTiposYNeumaticos();
+
+    // Ocultar hint después de 5 segundos
+    const timer = setTimeout(() => {
+      setShowSwipeHint(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Manejar expansión de categorías
@@ -119,6 +190,31 @@ function CatalogoNeumaticos() {
         ? prev.filter((id) => id !== tipoId)
         : [...prev, tipoId]
     );
+  };
+
+  // Función para manejar el scroll y actualizar el índice actual
+  const handleScroll = (e, categoryId) => {
+    const container = e.target;
+    const cardWidth = container.children[0]?.offsetWidth || 0;
+    const scrollLeft = container.scrollLeft;
+    const currentIndex = Math.round(scrollLeft / cardWidth);
+    
+    setCurrentIndexes(prev => ({
+      ...prev,
+      [categoryId]: currentIndex
+    }));
+  };
+
+  // Función para navegar a un producto específico
+  const scrollToIndex = (categoryId, index) => {
+    const container = document.querySelector(`[data-category="${categoryId}"] .catalogo-grid`);
+    if (container) {
+      const cardWidth = container.children[0]?.offsetWidth || 0;
+      container.scrollTo({
+        left: cardWidth * index,
+        behavior: 'smooth'
+      });
+    }
   };
 
   // Función para obtener el icono según el nombre de la categoría
@@ -164,6 +260,26 @@ function CatalogoNeumaticos() {
   return (
     <div style={{ width: "100%", background: "#f3f6fa", minHeight: "100vh", paddingBottom: 32 }}>
       <style>{`
+        @keyframes fadeInSlide {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideRight {
+          0%, 50% {
+            transform: translateX(0);
+          }
+          25% {
+            transform: translateX(4px);
+          }
+        }
+        
         @media (max-width: 768px) {
           .catalogo-grid {
             display: flex !important;
@@ -177,10 +293,25 @@ function CatalogoNeumaticos() {
             padding-right: 12px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
+            position: relative;
           }
+          
+          .catalogo-grid::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 30px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
+            pointer-events: none;
+            z-index: 1;
+          }
+          
           .catalogo-grid::-webkit-scrollbar {
             display: none;
           }
+          
           .neumatico-card {
             min-width: 92vw !important;
             max-width: 92vw !important;
@@ -190,8 +321,25 @@ function CatalogoNeumaticos() {
             margin-right: 4px;
             box-sizing: border-box;
             transition: box-shadow 0.2s;
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(14,165,233,0.08);
+          }
+          
+          .neumatico-card:hover {
+            box-shadow: 0 8px 24px rgba(14,165,233,0.12);
+          }
+          
+          .mobile-category-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 8px;
           }
         }
+        
         @media (min-width: 769px) {
           .catalogo-grid {
             display: grid;
@@ -201,18 +349,40 @@ function CatalogoNeumaticos() {
           .neumatico-card {
             min-width: 0;
             max-width: 100%;
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 16px rgba(14,165,233,0.08);
+            transition: box-shadow 0.2s;
+          }
+          .neumatico-card:hover {
+            box-shadow: 0 8px 24px rgba(14,165,233,0.12);
+          }
+          .mobile-category-header {
+            display: none;
+          }
+          .mobile-product-counter {
+            display: none;
           }
         }
       `}</style>
+
       {/* Categoría Destacados */}
       {destacados.length > 0 && (
-        <div key="destacados" style={{ marginBottom: 56 }}>
+        <div key="destacados" style={{ marginBottom: 56 }} data-category="destacados">
           <div style={categoriaStyle}>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, marginBottom: 18, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
               <i className={`fas ${getCategoriaIcon('destacados')}`} style={{ fontSize: 26, color: '#0ea5e9', minWidth: 28 }}></i>
               Destacados
             </h2>
-            <div className="catalogo-grid">
+            
+            <SwipeHint show={showSwipeHint && destacados.length > 1} />
+            
+            <div 
+              className="catalogo-grid"
+              onScroll={(e) => handleScroll(e, 'destacados')}
+            >
               {destacados.map(n => (
                 <NeumaticoCard
                   key={n.id}
@@ -221,6 +391,12 @@ function CatalogoNeumaticos() {
                 />
               ))}
             </div>
+            
+            <SwipeIndicator 
+              totalItems={destacados.length}
+              currentIndex={currentIndexes['destacados'] || 0}
+              onDotClick={(index) => scrollToIndex('destacados', index)}
+            />
           </div>
         </div>
       )}
@@ -230,7 +406,7 @@ function CatalogoNeumaticos() {
         const neumaticos = neumaticosPorTipo[tipo.id] || [];
         const mostrarNeumaticos = estaExpandida ? neumaticos : neumaticos.slice(0, 3);
         return (
-          <div key={tipo.id} style={{ marginBottom: 56 }}>
+          <div key={tipo.id} style={{ marginBottom: 56 }} data-category={tipo.id}>
             <div style={categoriaStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
                 <h2 style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -246,7 +422,11 @@ function CatalogoNeumaticos() {
                   </button>
                 )}
               </div>
-              <div className="catalogo-grid">
+              
+              <div 
+                className="catalogo-grid"
+                onScroll={(e) => handleScroll(e, tipo.id)}
+              >
                 {neumaticos.length === 0 ? (
                   <div style={{ color: "#64748b", fontSize: 16, padding: 24 }}>No hay neumáticos para este tipo.</div>
                 ) : (
@@ -259,6 +439,12 @@ function CatalogoNeumaticos() {
                   ))
                 )}
               </div>
+              
+              <SwipeIndicator 
+                totalItems={mostrarNeumaticos.length}
+                currentIndex={currentIndexes[tipo.id] || 0}
+                onDotClick={(index) => scrollToIndex(tipo.id, index)}
+              />
             </div>
           </div>
         );
@@ -267,4 +453,4 @@ function CatalogoNeumaticos() {
   );
 }
 
-export default CatalogoNeumaticos; 
+export default CatalogoNeumaticos;

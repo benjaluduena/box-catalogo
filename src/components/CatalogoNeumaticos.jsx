@@ -124,6 +124,286 @@ function SwipeHint({ show }) {
   );
 }
 
+// Componente para el modal Quick View
+function QuickViewModal({ neumatico, onClose, onViewFull }) {
+  if (!neumatico) return null;
+  
+  const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
+  const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: 20
+    }} onClick={onClose}>
+      <div style={{
+        background: '#fff',
+        borderRadius: 20,
+        padding: 24,
+        maxWidth: 500,
+        width: '100%',
+        maxHeight: '80vh',
+        overflowY: 'auto',
+        position: 'relative',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+      }} onClick={e => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            background: '#f1f5f9',
+            border: 'none',
+            borderRadius: '50%',
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            fontSize: 16,
+            color: '#64748b'
+          }}
+        >
+          ×
+        </button>
+        
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <img
+            src={neumatico.imagen || "/images/placeholder-tire.png"}
+            alt={neumatico.nombre}
+            style={{
+              width: 150,
+              height: 150,
+              objectFit: 'contain',
+              borderRadius: 12,
+              marginBottom: 16
+            }}
+          />
+          <h3 style={{ fontSize: 24, fontWeight: 800, color: '#0ea5e9', margin: '0 0 8px 0' }}>
+            {neumatico.nombre}
+          </h3>
+          <p style={{ color: '#64748b', fontSize: 16, fontWeight: 600, margin: '0 0 16px 0' }}>
+            {neumatico.marcas?.nombre}
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
+            <span style={{ fontWeight: 800, fontSize: 24, color: '#171717' }}>${precioFormateado}</span>
+            {neumatico.precio_anterior && (
+              <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: 18 }}>${precioAnteriorFormateado}</span>
+            )}
+          </div>
+          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
+            {neumatico.descripcion}
+          </p>
+          <button
+            onClick={() => onViewFull(neumatico.id)}
+            style={{
+              background: 'linear-gradient(90deg,#0ea5e9,#38bdf8)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 12,
+              padding: '12px 24px',
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              margin: '0 auto'
+            }}
+          >
+            <i className="fas fa-eye"></i>
+            Ver detalles completos
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Componente para los filtros
+function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marcasDisponibles, mostrarFiltros, setMostrarFiltros }) {
+  return (
+    <div style={{
+      background: '#fff',
+      borderRadius: 16,
+      padding: '20px 24px',
+      marginBottom: 24,
+      boxShadow: '0 4px 16px rgba(14,165,233,0.08)',
+      border: '1px solid #e2e8f0'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: mostrarFiltros ? 20 : 0 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0ea5e9', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <i className="fas fa-filter"></i>
+          Filtros y Ordenamiento
+        </h3>
+        <button
+          onClick={() => setMostrarFiltros(!mostrarFiltros)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#0ea5e9',
+            fontSize: 16,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}
+        >
+          {mostrarFiltros ? 'Ocultar' : 'Mostrar'}
+          <i className={`fas fa-chevron-${mostrarFiltros ? 'up' : 'down'}`}></i>
+        </button>
+      </div>
+      
+      {mostrarFiltros && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 16
+        }}>
+          {/* Búsqueda */}
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Buscar:
+            </label>
+            <input
+              type="text"
+              placeholder="Nombre, marca, descripción..."
+              value={filtros.busqueda}
+              onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14
+              }}
+            />
+          </div>
+          
+          {/* Filtro por precio */}
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Precio mín:
+            </label>
+            <input
+              type="number"
+              placeholder="0"
+              value={filtros.precioMin}
+              onChange={(e) => setFiltros({ ...filtros, precioMin: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Precio máx:
+            </label>
+            <input
+              type="number"
+              placeholder="999999"
+              value={filtros.precioMax}
+              onChange={(e) => setFiltros({ ...filtros, precioMax: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14
+              }}
+            />
+          </div>
+          
+          {/* Filtro por marca */}
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Marca:
+            </label>
+            <select
+              value={filtros.marcaSeleccionada}
+              onChange={(e) => setFiltros({ ...filtros, marcaSeleccionada: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14
+              }}
+            >
+              <option value="">Todas las marcas</option>
+              {marcasDisponibles.map(marca => (
+                <option key={marca.id} value={marca.id}>{marca.nombre}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Ordenamiento */}
+          <div>
+            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+              Ordenar por:
+            </label>
+            <select
+              value={ordenamiento}
+              onChange={(e) => setOrdenamiento(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14
+              }}
+            >
+              <option value="nombre-asc">Nombre A-Z</option>
+              <option value="nombre-desc">Nombre Z-A</option>
+              <option value="precio-asc">Precio menor a mayor</option>
+              <option value="precio-desc">Precio mayor a menor</option>
+              <option value="marca-asc">Marca A-Z</option>
+            </select>
+          </div>
+          
+          {/* Botón limpiar filtros */}
+          <div style={{ display: 'flex', alignItems: 'end' }}>
+            <button
+              onClick={() => {
+                setFiltros({ precioMin: '', precioMax: '', marcaSeleccionada: '', busqueda: '' });
+                setOrdenamiento('nombre-asc');
+              }}
+              style={{
+                background: '#f3f4f6',
+                color: '#374151',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                padding: '8px 16px',
+                fontSize: 14,
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CatalogoNeumaticos() {
   const [tiposVehiculo, setTiposVehiculo] = useState([]);
   const [neumaticosPorTipo, setNeumaticosPorTipo] = useState({});
@@ -133,6 +413,18 @@ function CatalogoNeumaticos() {
   const [destacados, setDestacados] = useState([]);
   const [currentIndexes, setCurrentIndexes] = useState({});
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  
+  // Estados para filtros y ordenamiento
+  const [filtros, setFiltros] = useState({
+    precioMin: '',
+    precioMax: '',
+    marcaSeleccionada: '',
+    busqueda: ''
+  });
+  const [ordenamiento, setOrdenamiento] = useState('nombre-asc');
+  const [marcasDisponibles, setMarcasDisponibles] = useState([]);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [quickViewNeumatico, setQuickViewNeumatico] = useState(null);
 
   useEffect(() => {
     async function fetchTiposYNeumaticos() {
@@ -171,6 +463,11 @@ function CatalogoNeumaticos() {
       setNeumaticosPorTipo(agrupados);
       // Filtrar destacados
       setDestacados(neumaticos.filter(n => n.destacado));
+      
+      // Obtener marcas únicas para el filtro
+      const marcasUnicas = [...new Map(neumaticos.map(n => [n.marcas?.id, n.marcas]).filter(([id, marca]) => marca)).values()];
+      setMarcasDisponibles(marcasUnicas);
+      
       setLoading(false);
     }
     fetchTiposYNeumaticos();
@@ -215,6 +512,53 @@ function CatalogoNeumaticos() {
         behavior: 'smooth'
       });
     }
+  };
+
+  // Función para filtrar y ordenar neumáticos
+  const filtrarYOrdenarNeumaticos = (neumaticos) => {
+    let resultado = [...neumaticos];
+    
+    // Aplicar filtros
+    if (filtros.precioMin !== '') {
+      resultado = resultado.filter(n => n.precio >= parseFloat(filtros.precioMin));
+    }
+    if (filtros.precioMax !== '') {
+      resultado = resultado.filter(n => n.precio <= parseFloat(filtros.precioMax));
+    }
+    if (filtros.marcaSeleccionada !== '') {
+      resultado = resultado.filter(n => n.marcas?.id?.toString() === filtros.marcaSeleccionada);
+    }
+    if (filtros.busqueda !== '') {
+      const busquedaLower = filtros.busqueda.toLowerCase();
+      resultado = resultado.filter(n => 
+        n.nombre?.toLowerCase().includes(busquedaLower) ||
+        n.descripcion?.toLowerCase().includes(busquedaLower) ||
+        n.marcas?.nombre?.toLowerCase().includes(busquedaLower)
+      );
+    }
+    
+    // Aplicar ordenamiento
+    switch (ordenamiento) {
+      case 'precio-asc':
+        resultado.sort((a, b) => a.precio - b.precio);
+        break;
+      case 'precio-desc':
+        resultado.sort((a, b) => b.precio - a.precio);
+        break;
+      case 'nombre-asc':
+        resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        break;
+      case 'nombre-desc':
+        resultado.sort((a, b) => b.nombre.localeCompare(a.nombre));
+        break;
+      case 'marca-asc':
+        resultado.sort((a, b) => (a.marcas?.nombre || '').localeCompare(b.marcas?.nombre || ''));
+        break;
+      default:
+        break;
+    }
+    
+    return resultado;
   };
 
   // Función para obtener el icono según el nombre de la categoría

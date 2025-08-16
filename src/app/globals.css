@@ -1276,6 +1276,19 @@ html {
     scroll-behavior: smooth;
 }
 
+/* Reduced motion global styles */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Estilos específicos para iPhone y Safari */
 @supports (-webkit-touch-callout: none) {
     .service-card {

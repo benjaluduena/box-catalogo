@@ -1,7 +1,12 @@
 // Sistema de autenticación mejorado para el panel admin
-const ADMIN_TOKEN = 'box-admin-2024-secure-token';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutos
+
+if (!ADMIN_TOKEN || !ADMIN_PASSWORD) {
+  console.error('Missing admin environment variables');
+}
 
 export const auth = {
   // Verificar si el usuario está autenticado
@@ -37,7 +42,7 @@ export const auth = {
       throw new Error(`Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`);
     }
     
-    if (password === 'box-admin-2024') {
+    if (password === ADMIN_PASSWORD) {
       // Resetear contador de intentos fallidos
       localStorage.removeItem('adminLoginAttempts');
       localStorage.removeItem('adminLockoutUntil');

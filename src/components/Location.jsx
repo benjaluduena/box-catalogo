@@ -15,7 +15,9 @@ function Location() {
               style={{ border: 0, borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}
               allowFullScreen=""
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="no-referrer"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+              title="Ubicación de Box Neumáticos"
             ></iframe>
           </div>
           <div className="location-info">

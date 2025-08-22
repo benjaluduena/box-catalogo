@@ -1,6 +1,11 @@
 @import "tailwindcss";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
 
+/* Estrategia de carga progresiva para Brave Browser */
+@supports (font-display: swap) {
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -37,11 +42,14 @@ body {
 
 /* Mi css */
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
-
-/* Fallback para cuando Google Fonts está bloqueado */
+/* Mejorado: Múltiples fallbacks para compatibilidad con Brave Browser */
 body {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-family: var(--font-geist-sans), 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Específicamente para iconos cuando Font Awesome está bloqueado */
+.fa, .fas, .far, .fal, .fab {
+  font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Pro', 'Font Awesome 6 Brands', 'Material Icons', sans-serif;
 }
 
 * {

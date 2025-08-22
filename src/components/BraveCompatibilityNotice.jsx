@@ -1,16 +1,22 @@
 "use client";
 import { useState, useEffect } from 'react';
 
-export default function BraveCompatibilityNotice() {
+export default function BrowserCompatibilityNotice() {
   const [showNotice, setShowNotice] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [browserType, setBrowserType] = useState('');
 
   useEffect(() => {
-    // Detectar si es Brave Browser
+    // Detectar tipo de navegador
     const isBrave = navigator.brave && navigator.brave.isBrave;
-    const isDismissed = localStorage.getItem('brave-notice-dismissed');
+    const isEdge = navigator.userAgent.includes('Edg/');
+    const isDismissed = localStorage.getItem('browser-notice-dismissed');
     
     if (isBrave && !isDismissed) {
+      setBrowserType('brave');
+      setShowNotice(true);
+    } else if (isEdge && !isDismissed) {
+      setBrowserType('edge');
       setShowNotice(true);
     }
   }, []);
@@ -18,8 +24,25 @@ export default function BraveCompatibilityNotice() {
   const handleDismiss = () => {
     setDismissed(true);
     setShowNotice(false);
-    localStorage.setItem('brave-notice-dismissed', 'true');
+    localStorage.setItem('browser-notice-dismissed', 'true');
   };
+
+  const getNoticeContent = () => {
+    if (browserType === 'brave') {
+      return {
+        title: 'Usuario de Brave Browser',
+        message: 'Hemos optimizado el sitio para Brave. Si aún ves problemas, puedes hacer clic en el escudo 🛡️ y seleccionar "Shields Down"'
+      };
+    } else if (browserType === 'edge') {
+      return {
+        title: 'Usuario de Microsoft Edge',
+        message: 'Si el sitio no carga correctamente, desactiva "Tracking Prevention" para este sitio en la configuración de privacidad'
+      };
+    }
+    return { title: '', message: '' };
+  };
+
+  const { title, message } = getNoticeContent();
 
   if (!showNotice || dismissed) return null;
 
@@ -44,10 +67,10 @@ export default function BraveCompatibilityNotice() {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 'bold', marginBottom: '6px' }}>
-            Usuario de Brave Browser
+            {title}
           </div>
           <div style={{ marginBottom: '10px' }}>
-            Si ves problemas de carga, haz clic en el escudo de Brave y selecciona "Shields Down"
+            {message}
           </div>
           <button
             onClick={handleDismiss}

@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "../components/RootLayoutClient";
-import BraveCompatibilityNotice from "../components/BraveCompatibilityNotice";
+import BrowserCompatibilityNotice from "../components/BraveCompatibilityNotice";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +43,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <RootLayoutClient>{children}</RootLayoutClient>
-        <BraveCompatibilityNotice />
+        <BrowserCompatibilityNotice />
       </body>
     </html>
   );

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Mejorar compatibilidad con Brave
+  poweredByHeader: false,
+  compress: true,
   images: {
     remotePatterns: [
       {

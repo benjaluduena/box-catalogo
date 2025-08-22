@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "../components/RootLayoutClient";
+import BraveCompatibilityNotice from "../components/BraveCompatibilityNotice";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,10 @@ export const metadata = {
   title: "Box Neumáticos - Catálogo Completo",
   description: "Encuentra los mejores neumáticos para tu vehículo. Catálogo completo con búsqueda avanzada y filtros inteligentes.",
   keywords: "neumáticos, llantas, autos, camionetas, motos, Córdoba",
+  // Mejorar compatibilidad con Brave Browser
+  other: {
+    'referrer': 'no-referrer-when-downgrade',
+  },
   authors: [{ name: "Box Neumáticos" }],
   robots: "index, follow",
   openGraph: {
@@ -38,6 +43,7 @@ export default function RootLayout({ children }) {
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <RootLayoutClient>{children}</RootLayoutClient>
+        <BraveCompatibilityNotice />
       </body>
     </html>
   );

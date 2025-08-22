@@ -214,7 +214,6 @@ function CatalogoNeumaticosEnhanced() {
     return Array.from(suggestions).slice(0, 10);
   }, [allNeumaticos]);
 
-
   const fetchTiposYNeumaticos = useCallback(async (refresh = false) => {
     try {
       setLoading(true);
@@ -259,8 +258,7 @@ function CatalogoNeumaticosEnhanced() {
         neumaticos?.map(n => [n.marcas?.id, n.marcas])
           .filter(([id, marca]) => marca && id)
       ).values()];
-      console.log('Marcas disponibles:', marcasUnicas);
-      console.log('Neumáticos con marcas:', neumaticos?.filter(n => n.marcas).length);
+      
       setMarcasDisponibles(marcasUnicas);
       
     } catch (error) {
@@ -329,25 +327,18 @@ function CatalogoNeumaticosEnhanced() {
   // Función para filtrar y ordenar neumáticos
   const filtrarYOrdenarNeumaticos = useCallback((neumaticos) => {
     let resultado = [...neumaticos];
-    
-    console.log('Filtros aplicados:', filtros);
-    console.log('Total neumáticos antes de filtrar:', neumaticos.length);
-    
+
     // Aplicar filtros
     if (filtros.marcasMultiples && filtros.marcasMultiples.length > 0) {
-      console.log('Filtrando por marcas múltiples:', filtros.marcasMultiples);
       resultado = resultado.filter(n => {
         const marcaId = n.marcas?.id?.toString();
         const includes = filtros.marcasMultiples.map(id => id.toString()).includes(marcaId);
-        console.log(`Neumático ${n.nombre} - Marca ID: ${marcaId} - Incluido: ${includes}`);
         return includes;
       });
     } else if (filtros.marcaSeleccionada !== '') {
-      console.log('Filtrando por marca seleccionada:', filtros.marcaSeleccionada);
       resultado = resultado.filter(n => n.marcas?.id?.toString() === filtros.marcaSeleccionada.toString());
     }
-    
-    console.log('Total neumáticos después de filtrar:', resultado.length);
+
     if (filtros.busqueda !== '') {
       const busquedaLower = filtros.busqueda.toLowerCase();
       resultado = resultado.filter(n => 

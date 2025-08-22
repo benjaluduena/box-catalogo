@@ -300,10 +300,10 @@ export default function NeumaticosPage() {
           </h1>
           <button
             onClick={() => { 
-              console.log('Botón Nuevo Neumático clickeado');
+              
               resetForm(false); 
               setShowForm(true);
-              console.log('ShowForm establecido a true');
+              
             }}
             style={{
               display: "flex",
@@ -584,7 +584,6 @@ export default function NeumaticosPage() {
         )}
 
         {/* Formulario */}
-        {console.log('showForm estado:', showForm)}
         {showForm && (
           <div style={{
             background: "white",

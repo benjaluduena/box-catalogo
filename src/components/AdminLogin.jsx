@@ -37,13 +37,9 @@ export default function AdminLogin() {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      if (auth.login(password)) {
+      const success = await auth.login(password);
+      if (success) {
         router.push("/admin/dashboard");
-      } else {
-        const attempts = auth.getLoginAttempts();
-        setLoginAttempts(attempts);
-        const remainingAttempts = 5 - attempts;
-        setError(`Contraseña incorrecta. Intentos restantes: ${remainingAttempts}`);
       }
     } catch (error) {
       setError(error.message);

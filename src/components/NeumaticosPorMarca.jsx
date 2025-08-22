@@ -41,7 +41,9 @@ export default function NeumaticosPorMarca({ marcaId }) {
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 700, fontSize: 16, color: "#1e293b" }}>{n.nombre}</div>
             <div style={{ color: "#64748b", fontSize: 13 }}>{n.descripcion}</div>
+            {/* PRECIO OCULTO - COMENTADO
             <div style={{ fontWeight: 700, color: "#0ea5e9", fontSize: 15 }}>${n.precio}</div>
+            */}
           </div>
           <button
             onClick={() => handleEditNeumatico(n.id)}

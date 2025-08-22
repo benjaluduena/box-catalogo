@@ -1,38 +1,24 @@
 // Sistema de autenticación mejorado para el panel admin
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutos
 
-if (!ADMIN_TOKEN || !ADMIN_PASSWORD) {
-  console.error('Missing admin environment variables');
-}
-
 export const auth = {
   // Verificar si el usuario está autenticado
-  isAuthenticated: () => {
+  isAuthenticated: async () => {
     if (typeof window === 'undefined') return false;
     
-    const token = localStorage.getItem('adminToken');
-    const loginTime = localStorage.getItem('adminLoginTime');
-    
-    if (!token || token !== ADMIN_TOKEN) return false;
-    
-    // Verificar si la sesión no ha expirado (24 horas)
-    if (loginTime) {
-      const now = Date.now();
-      const sessionTime = 24 * 60 * 60 * 1000; // 24 horas
-      if (now - parseInt(loginTime) > sessionTime) {
-        auth.logout();
-        return false;
-      }
+    try {
+      const response = await fetch('/api/auth/verify');
+      const data = await response.json();
+      return data.authenticated;
+    } catch (error) {
+      console.error('Error verificando autenticación:', error);
+      return false;
     }
-    
-    return true;
   },
 
   // Iniciar sesión con protección contra ataques de fuerza bruta
-  login: (password) => {
+  login: async (password) => {
     if (typeof window === 'undefined') return false;
     
     // Verificar si está bloqueado
@@ -42,44 +28,59 @@ export const auth = {
       throw new Error(`Demasiados intentos fallidos. Intenta de nuevo en ${remainingTime} minutos.`);
     }
     
-    if (password === ADMIN_PASSWORD) {
-      // Resetear contador de intentos fallidos
-      localStorage.removeItem('adminLoginAttempts');
-      localStorage.removeItem('adminLockoutUntil');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+      });
       
-      // Guardar token y tiempo de login
-      localStorage.setItem('adminToken', ADMIN_TOKEN);
-      localStorage.setItem('adminLoginTime', Date.now().toString());
-      return true;
-    } else {
-      // Incrementar contador de intentos fallidos
-      const attempts = parseInt(localStorage.getItem('adminLoginAttempts') || '0') + 1;
-      localStorage.setItem('adminLoginAttempts', attempts.toString());
+      const data = await response.json();
       
-      if (attempts >= MAX_LOGIN_ATTEMPTS) {
-        const lockoutTime = Date.now() + LOCKOUT_TIME;
-        localStorage.setItem('adminLockoutUntil', lockoutTime.toString());
-        throw new Error('Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.');
+      if (response.ok && data.success) {
+        // Resetear contador de intentos fallidos
+        localStorage.removeItem('adminLoginAttempts');
+        localStorage.removeItem('adminLockoutUntil');
+        
+        // Guardar tiempo de login
+        localStorage.setItem('adminLoginTime', Date.now().toString());
+        return true;
+      } else {
+        // Incrementar contador de intentos fallidos
+        const attempts = parseInt(localStorage.getItem('adminLoginAttempts') || '0') + 1;
+        localStorage.setItem('adminLoginAttempts', attempts.toString());
+        
+        if (attempts >= MAX_LOGIN_ATTEMPTS) {
+          const lockoutTime = Date.now() + LOCKOUT_TIME;
+          localStorage.setItem('adminLockoutUntil', lockoutTime.toString());
+          throw new Error('Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.');
+        }
+        
+        throw new Error(data.error || 'Contraseña incorrecta');
       }
-      
-      return false;
+    } catch (error) {
+      if (error.message.includes('intentos fallidos')) {
+        throw error;
+      }
+      throw new Error('Error de conexión. Intenta de nuevo.');
     }
   },
 
   // Cerrar sesión
-  logout: () => {
+  logout: async () => {
     if (typeof window === 'undefined') return;
     
-    localStorage.removeItem('adminToken');
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+    
     localStorage.removeItem('adminLoginTime');
     localStorage.removeItem('adminLoginAttempts');
     localStorage.removeItem('adminLockoutUntil');
-  },
-
-  // Obtener token
-  getToken: () => {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('adminToken');
   },
 
   // Verificar si hay intentos fallidos

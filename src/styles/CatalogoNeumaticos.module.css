@@ -6,6 +6,15 @@
   padding-bottom: 32px;
 }
 
+/* Safe area para iPhones con notch */
+@supports (padding: max(0px)) {
+  .catalogo {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+}
+
 /* Animations */
 @keyframes fadeInSlide {
   from {
@@ -132,6 +141,11 @@
 .neumaticoCard:hover {
   box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12);
   transform: translateY(-2px);
+}
+
+.neumaticoCard:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
 }
 
 .neumaticoCard:focus {
@@ -340,8 +354,21 @@
     padding-left: 12px;
     padding-right: 12px;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer y Edge */
     position: relative;
+  }
+
+  .catalogoGrid::-webkit-scrollbar {
+    display: none; /* Chrome, Safari y Opera */
+  }
+
+  /* Safe area para móviles con notch */
+  @supports (padding: max(0px)) {
+    .catalogoGrid {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
   }
 
   .catalogoGrid::before {

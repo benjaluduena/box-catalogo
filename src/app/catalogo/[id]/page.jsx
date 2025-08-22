@@ -32,9 +32,9 @@ export default function NeumaticoDetallePage() {
   if (loading) return <p style={{ textAlign: "center" }}>Cargando neumático...</p>;
   if (!neumatico) return <p style={{ textAlign: "center" }}>Neumático no encontrado.</p>;
 
-  // Formateo de precios con puntos
-  const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
-  const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
+  // Formateo de precios con puntos - COMENTADO PARA OCULTAR PRECIOS
+  // const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
+  // const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
 
   const handleCantidad = (delta) => {
     setCantidad((prev) => {
@@ -142,12 +142,14 @@ export default function NeumaticoDetallePage() {
         <div style={{ flex: 2, minWidth: 240, maxWidth: 540, background: "#fff", borderRadius: 20, boxShadow: "none", padding: 0, margin: "0 auto", display: "flex", flexDirection: "column" }}>
           <h2 style={{ fontSize: 36, fontWeight: 800, marginBottom: 10, color: "#0ea5e9", lineHeight: 1.1 }}>{neumatico.nombre}</h2>
           <div style={{ color: "#1e293b", fontSize: 18, marginBottom: 12, fontWeight: 600 }}>{neumatico.marcas?.nombre}</div>
+          {/* PRECIOS OCULTOS - COMENTADO
           <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 16 }}>
             <span style={{ fontWeight: 800, fontSize: 28, color: "#171717" }}>${precioFormateado}</span>
             {neumatico.precio_anterior && (
               <span style={{ textDecoration: "line-through", color: "#94a3b8", fontSize: 20, fontWeight: 600 }}>${precioAnteriorFormateado}</span>
             )}
           </div>
+          */}
           <div style={{ fontSize: 16, color: "#64748b", marginBottom: 22, minHeight: 40 }}>{neumatico.descripcion}</div>
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontWeight: 700, marginBottom: 10, color: "#0ea5e9", fontSize: 16 }}>Medidas disponibles:</div>

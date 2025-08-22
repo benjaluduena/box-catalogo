@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 // Subcomponente para la tarjeta de neumático
 function NeumaticoCard({ neumatico, onClick }) {
   const { nombre, descripcion, precio, precio_anterior, imagen, marcas } = neumatico;
-  // Formateo de precios con puntos
-  const precioFormateado = typeof precio === 'number' ? precio.toLocaleString('es-AR') : precio;
-  const precioAnteriorFormateado = typeof precio_anterior === 'number' ? precio_anterior.toLocaleString('es-AR') : precio_anterior;
+  // Formateo de precios con puntos - COMENTADO PARA OCULTAR PRECIOS
+  // const precioFormateado = typeof precio === 'number' ? precio.toLocaleString('es-AR') : precio;
+  // const precioAnteriorFormateado = typeof precio_anterior === 'number' ? precio_anterior.toLocaleString('es-AR') : precio_anterior;
   return (
     <div className="neumatico-card" onClick={onClick} style={{ cursor: "pointer", position: "relative" }}>
       {/* Banda de marca reubicada a la izquierda */}
@@ -40,12 +40,14 @@ function NeumaticoCard({ neumatico, onClick }) {
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
         <div style={{ fontWeight: 700, fontSize: 19, color: "#1e293b", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nombre}</div>
         <div style={{ color: "#64748b", fontSize: 15, marginBottom: 2, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{descripcion}</div>
+        {/* PRECIOS OCULTOS - COMENTADO
         <div style={{ fontWeight: 800, fontSize: 22, color: "#171717", marginBottom: 2, display: "flex", alignItems: "center", gap: 10 }}>
           ${precioFormateado}
           {precio_anterior && (
             <span style={{ textDecoration: "line-through", color: "#94a3b8", marginLeft: 6, fontWeight: 500, fontSize: 15 }}>${precioAnteriorFormateado}</span>
           )}
         </div>
+        */}
         <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
           <button
             className="btn btn-primary btn-ver-mas"
@@ -128,8 +130,9 @@ function SwipeHint({ show }) {
 function QuickViewModal({ neumatico, onClose, onViewFull }) {
   if (!neumatico) return null;
   
-  const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
-  const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
+  // PRECIOS OCULTOS - COMENTADO
+  // const precioFormateado = typeof neumatico.precio === 'number' ? neumatico.precio.toLocaleString('es-AR') : neumatico.precio;
+  // const precioAnteriorFormateado = typeof neumatico.precio_anterior === 'number' ? neumatico.precio_anterior.toLocaleString('es-AR') : neumatico.precio_anterior;
   
   return (
     <div style={{
@@ -196,12 +199,14 @@ function QuickViewModal({ neumatico, onClose, onViewFull }) {
           <p style={{ color: '#64748b', fontSize: 16, fontWeight: 600, margin: '0 0 16px 0' }}>
             {neumatico.marcas?.nombre}
           </p>
+          {/* PRECIOS OCULTOS - COMENTADO
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 }}>
             <span style={{ fontWeight: 800, fontSize: 24, color: '#171717' }}>${precioFormateado}</span>
             {neumatico.precio_anterior && (
               <span style={{ textDecoration: 'line-through', color: '#94a3b8', fontSize: 18 }}>${precioAnteriorFormateado}</span>
             )}
           </div>
+          */}
           <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
             {neumatico.descripcion}
           </p>
@@ -291,7 +296,7 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
             />
           </div>
           
-          {/* Filtro por precio */}
+          {/* FILTROS DE PRECIO OCULTOS - COMENTADO
           <div>
             <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
               Precio mín:
@@ -329,6 +334,7 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
               }}
             />
           </div>
+          */}
           
           {/* Filtro por marca */}
           <div>
@@ -371,8 +377,10 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
             >
               <option value="nombre-asc">Nombre A-Z</option>
               <option value="nombre-desc">Nombre Z-A</option>
+              {/* OPCIONES DE PRECIO OCULTAS - COMENTADO
               <option value="precio-asc">Precio menor a mayor</option>
               <option value="precio-desc">Precio mayor a menor</option>
+              */}
               <option value="marca-asc">Marca A-Z</option>
             </select>
           </div>
@@ -519,14 +527,17 @@ function CatalogoNeumaticos() {
     let resultado = [...neumaticos];
     
     // Aplicar filtros
+    // FILTROS DE PRECIO COMENTADOS
+    /*
     if (filtros.precioMin !== '') {
       resultado = resultado.filter(n => n.precio >= parseFloat(filtros.precioMin));
     }
     if (filtros.precioMax !== '') {
       resultado = resultado.filter(n => n.precio <= parseFloat(filtros.precioMax));
     }
+    */
     if (filtros.marcaSeleccionada !== '') {
-      resultado = resultado.filter(n => n.marcas?.id?.toString() === filtros.marcaSeleccionada);
+      resultado = resultado.filter(n => n.marcas?.id?.toString() === filtros.marcaSeleccionada.toString());
     }
     if (filtros.busqueda !== '') {
       const busquedaLower = filtros.busqueda.toLowerCase();
@@ -539,12 +550,15 @@ function CatalogoNeumaticos() {
     
     // Aplicar ordenamiento
     switch (ordenamiento) {
+      // ORDENAMIENTO POR PRECIO COMENTADO
+      /*
       case 'precio-asc':
         resultado.sort((a, b) => a.precio - b.precio);
         break;
       case 'precio-desc':
         resultado.sort((a, b) => b.precio - a.precio);
         break;
+      */
       case 'nombre-asc':
         resultado.sort((a, b) => a.nombre.localeCompare(b.nombre));
         break;

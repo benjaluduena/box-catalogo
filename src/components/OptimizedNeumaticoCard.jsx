@@ -76,7 +76,7 @@ const NeumaticoCard = memo(function NeumaticoCard({
             onLoad={handleImageLoad}
             onError={handleImageError}
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
           />
         </div>
         

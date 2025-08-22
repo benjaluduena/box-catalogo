@@ -1,5 +1,16 @@
-"use client";
 import CatalogoNeumaticosEnhanced from "../../components/CatalogoNeumaticosEnhanced";
+
+export const metadata = {
+  title: "Catálogo de Neumáticos - Box Neumáticos | Córdoba",
+  description: "Explora nuestro catálogo completo de neumáticos en Villa del Rosario, Córdoba. Marcas como Michelin, Pirelli, Bridgestone, Firestone y Fate. Búsqueda por medida y vehículo.",
+  keywords: "catálogo neumáticos, llantas Córdoba, neumáticos Villa del Rosario, Michelin, Pirelli, Bridgestone",
+  openGraph: {
+    title: "Catálogo de Neumáticos - Box Neumáticos",
+    description: "Encuentra los neumáticos perfectos para tu vehículo. Catálogo completo con las mejores marcas.",
+    type: "website",
+    locale: "es_AR",
+  },
+};
 
 export default function CatalogoPage() {
   return (

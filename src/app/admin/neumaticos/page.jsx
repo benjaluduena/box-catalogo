@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AdminLayout from "../../../components/AdminLayout";
 import { supabase } from "../../../lib/supabaseClient";
 import MedidasInline from '../../../components/MedidasInline';
+import { validateForm, sanitizeInput } from '../../../lib/validation';
 
 export default function NeumaticosPage() {
   const [neumaticos, setNeumaticos] = useState([]);
@@ -25,6 +26,7 @@ export default function NeumaticosPage() {
     destacado: false
   });
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState({});
   const fileInputRef = useRef();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,14 +75,36 @@ export default function NeumaticosPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setErrors({});
+
+    const validationRules = {
+      nombre: { type: 'text', options: { required: true, minLength: 2, maxLength: 100 } },
+      precio: { type: 'price', options: { required: true } },
+      descripcion: { type: 'text', options: { maxLength: 500 } },
+      precio_anterior: { type: 'price', options: { required: false } }
+    };
+
+    const sanitizedData = {
+      ...formData,
+      nombre: sanitizeInput(formData.nombre),
+      descripcion: sanitizeInput(formData.descripcion)
+    };
+
+    const validation = validateForm(sanitizedData, validationRules);
+
+    if (!validation.isValid) {
+      setErrors(validation.errors);
+      setMessage("Por favor corrige los errores en el formulario");
+      return;
+    }
 
     try {
       const neumaticoData = {
-        ...formData,
-        precio: parseFloat(formData.precio),
-        precio_anterior: formData.precio_anterior ? parseFloat(formData.precio_anterior) : null,
-        marca_id: formData.marca_id ? parseInt(formData.marca_id) : null,
-        tipo_id: formData.tipo_id ? parseInt(formData.tipo_id) : null
+        ...sanitizedData,
+        precio: parseFloat(sanitizedData.precio),
+        precio_anterior: sanitizedData.precio_anterior ? parseFloat(sanitizedData.precio_anterior) : null,
+        marca_id: sanitizedData.marca_id ? parseInt(sanitizedData.marca_id) : null,
+        tipo_id: sanitizedData.tipo_id ? parseInt(sanitizedData.tipo_id) : null
       };
 
       if (editingId) {
@@ -192,7 +216,8 @@ export default function NeumaticosPage() {
     });
     setEditingId(null);
     setShowForm(false);
-    setMessage(""); // Limpiar mensaje
+    setMessage("");
+    setErrors({});
   };
 
   return (
@@ -284,11 +309,16 @@ export default function NeumaticosPage() {
                       width: "100%",
                       padding: "12px",
                       borderRadius: "8px",
-                      border: "2px solid #e0f2fe",
+                      border: `2px solid ${errors.nombre ? "#dc2626" : "#e0f2fe"}`,
                       fontSize: "16px"
                     }}
                     required
                   />
+                  {errors.nombre && (
+                    <div style={{ color: "#dc2626", fontSize: "14px", marginTop: "4px" }}>
+                      {errors.nombre}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label style={{
@@ -308,11 +338,16 @@ export default function NeumaticosPage() {
                       width: "100%",
                       padding: "12px",
                       borderRadius: "8px",
-                      border: "2px solid #e0f2fe",
+                      border: `2px solid ${errors.precio ? "#dc2626" : "#e0f2fe"}`,
                       fontSize: "16px"
                     }}
                     required
                   />
+                  {errors.precio && (
+                    <div style={{ color: "#dc2626", fontSize: "14px", marginTop: "4px" }}>
+                      {errors.precio}
+                    </div>
+                  )}
                 </div>
               </div>
 

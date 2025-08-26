@@ -2,24 +2,34 @@ import { supabase } from "../../../lib/supabaseClient";
 import NeumaticoDetalleClient from "./NeumaticoDetalleClient";
 
 export async function generateMetadata({ params }) {
-  const { id } = params;
+  const { id } = await params;
   
   try {
     const { data: neumatico } = await supabase
       .from("neumaticos")
-      .select(`*, marcas(nombre)`)
+      .select("*")
       .eq("id", id)
       .single();
+      
+    let marca = null;
+    if (neumatico && neumatico.marca_id) {
+      const { data: marcaData } = await supabase
+        .from("marcas")
+        .select("nombre")
+        .eq("id", neumatico.marca_id)
+        .single();
+      marca = marcaData;
+    }
 
     if (neumatico) {
       return {
-        title: `${neumatico.nombre} - ${neumatico.marcas?.nombre} | Box Neumáticos`,
-        description: `${neumatico.descripcion || `Neumático ${neumatico.nombre} de ${neumatico.marcas?.nombre}`}. Disponible en Box Neumáticos, Villa del Rosario, Córdoba.`,
-        keywords: `${neumatico.nombre}, ${neumatico.marcas?.nombre}, neumáticos Córdoba, Box Neumáticos`,
+        title: `${neumatico.nombre} - ${marca?.nombre || 'Marca'} | Box Neumáticos`,
+        description: `${neumatico.descripcion || `Neumático ${neumatico.nombre} de ${marca?.nombre || 'marca'}`}. Disponible en Box Neumáticos, Villa del Rosario, Córdoba.`,
+        keywords: `${neumatico.nombre}, ${marca?.nombre || ''}, neumáticos Córdoba, Box Neumáticos`,
         openGraph: {
-          title: `${neumatico.nombre} - ${neumatico.marcas?.nombre}`,
+          title: `${neumatico.nombre} - ${marca?.nombre || 'Marca'}`,
           description: neumatico.descripcion || `Neumático ${neumatico.nombre} disponible en Box Neumáticos`,
-          type: "product",
+          type: "website",
           locale: "es_AR",
           images: neumatico.imagen ? [neumatico.imagen] : [],
         },

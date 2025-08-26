@@ -13,16 +13,44 @@ export default function NeumaticoDetalleClient() {
 
   useEffect(() => {
     async function fetchNeumatico() {
-      const { data, error } = await supabase
+      console.log("Fetching neumatico with ID:", id);
+      
+      // Consulta simplificada sin relaciones complejas
+      const { data: neumatico, error } = await supabase
         .from("neumaticos")
-        .select(`*, marcas(nombre, logo), medidas(id, medida, stock)`)
+        .select("*")
         .eq("id", id)
         .single();
-      if (!error) {
-        setNeumatico(data);
-        if (data.medidas && data.medidas.length > 0) {
-          setMedidaSeleccionada(data.medidas[0]);
-        }
+        
+      if (error) {
+        console.error("Error fetching neumatico:", error);
+        setLoading(false);
+        return;
+      }
+      
+      // Obtener marca por separado
+      const { data: marca } = await supabase
+        .from("marcas")
+        .select("nombre, logo")
+        .eq("id", neumatico.marca_id)
+        .single();
+        
+      // Obtener medidas por separado
+      const { data: medidas } = await supabase
+        .from("medidas")
+        .select("id, medida, stock")
+        .eq("neumatico_id", id);
+        
+      // Combinar los datos
+      const data = {
+        ...neumatico,
+        marcas: marca,
+        medidas: medidas || []
+      };
+      
+      setNeumatico(data);
+      if (data.medidas && data.medidas.length > 0) {
+        setMedidaSeleccionada(data.medidas[0]);
       }
       setLoading(false);
     }

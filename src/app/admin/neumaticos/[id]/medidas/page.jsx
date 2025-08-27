@@ -12,7 +12,7 @@ export default function MedidasPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ medida: "", stock: "" });
+  const [formData, setFormData] = useState({ medida: "" });
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export default function MedidasPage() {
           .single(),
         supabase
           .from("medidas")
-          .select("*")
+          .select("id, medida, neumatico_id")
           .eq("neumatico_id", id)
           .order("medida")
       ]);
@@ -51,11 +51,15 @@ export default function MedidasPage() {
     e.preventDefault();
     setMessage("");
 
+    if (!formData.medida.trim()) {
+      setMessage("La medida es requerida");
+      return;
+    }
+
     try {
       const medidaData = {
-        ...formData,
-        neumatico_id: parseInt(id),
-        stock: parseInt(formData.stock)
+        medida: formData.medida,
+        neumatico_id: parseInt(id)
       };
 
       if (editingId) {
@@ -75,7 +79,7 @@ export default function MedidasPage() {
         setMessage("Medida creada correctamente");
       }
 
-      setFormData({ medida: "", stock: "" });
+      setFormData({ medida: "" });
       setEditingId(null);
       setShowForm(false);
       fetchData();
@@ -86,7 +90,7 @@ export default function MedidasPage() {
   };
 
   const handleEdit = (medida) => {
-    setFormData({ medida: medida.medida, stock: medida.stock.toString() });
+    setFormData({ medida: medida.medida });
     setEditingId(medida.id);
     setShowForm(true);
   };
@@ -110,7 +114,7 @@ export default function MedidasPage() {
   };
 
   const handleCancel = () => {
-    setFormData({ medida: "", stock: "" });
+    setFormData({ medida: "" });
     setEditingId(null);
     setShowForm(false);
     setMessage("");
@@ -218,7 +222,7 @@ export default function MedidasPage() {
               {editingId ? "Editar Medida" : "Nueva Medida"}
             </h2>
             <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+              <div style={{ marginBottom: "16px" }}>
                 <div>
                   <label style={{
                     display: "block",
@@ -240,30 +244,6 @@ export default function MedidasPage() {
                       fontSize: "16px"
                     }}
                     placeholder="Ej: 205/55R16"
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{
-                    display: "block",
-                    marginBottom: "8px",
-                    fontWeight: "600",
-                    color: "#1e293b"
-                  }}>
-                    Stock *
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                    style={{
-                      width: "100%",
-                      padding: "12px",
-                      borderRadius: "8px",
-                      border: "2px solid #e0f2fe",
-                      fontSize: "16px"
-                    }}
                     required
                   />
                 </div>
@@ -356,7 +336,7 @@ export default function MedidasPage() {
                       color: "#64748b",
                       fontSize: "14px"
                     }}>
-                      Stock: <span style={{ fontWeight: "600", color: "#0ea5e9" }}>{medida.stock}</span>
+                      Medida disponible para cotización
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "8px" }}>

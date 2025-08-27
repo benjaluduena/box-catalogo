@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import MobileTabNavigation from './MobileTabNavigation';
+import { useEnhancedSwipe } from '../hooks/useEnhancedSwipe';
 
 // Subcomponente para la tarjeta de neumático
 function NeumaticoCard({ neumatico, onClick }) {
@@ -28,18 +30,64 @@ function NeumaticoCard({ neumatico, onClick }) {
           textTransform: "uppercase"
         }}>{marcas.nombre}</div>
       )}
-      {/* Imagen */}
-      <div style={{ flex: "0 0 110px", display: "flex", alignItems: "center", justifyContent: "center", marginRight: 24 }}>
+      {/* Imagen mejorada - más grande */}
+      <div style={{ flex: "0 0 140px", display: "flex", alignItems: "center", justifyContent: "center", marginRight: 24, marginBottom: 16 }}>
         <img
           src={imagen || "/images/placeholder-tire.png"}
           alt={nombre}
-          style={{ width: 96, height: 96, objectFit: "contain", background: "transparent", borderRadius: 14, boxShadow: "0 2px 8px rgba(14,165,233,0.08)" }}
+          style={{ 
+            width: 120, 
+            height: 120, 
+            objectFit: "contain", 
+            background: "transparent", 
+            borderRadius: 16, 
+            boxShadow: "0 4px 16px rgba(14,165,233,0.12)",
+            transition: "transform 0.3s ease"
+          }}
+          onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+          onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
         />
       </div>
-      {/* Info */}
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ fontWeight: 700, fontSize: 19, color: "#1e293b", marginBottom: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nombre}</div>
-        <div style={{ color: "#64748b", fontSize: 15, marginBottom: 2, fontWeight: 500, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{descripcion}</div>
+      {/* Info mejorada */}
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ 
+          fontWeight: 800, 
+          fontSize: 22, 
+          color: "#0f172a", 
+          marginBottom: 4, 
+          lineHeight: 1.2,
+          overflow: "hidden", 
+          textOverflow: "ellipsis",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical"
+        }}>{nombre}</div>
+        <div style={{ 
+          color: "#64748b", 
+          fontSize: 16, 
+          marginBottom: 6, 
+          fontWeight: 600, 
+          lineHeight: 1.4,
+          overflow: "hidden", 
+          textOverflow: "ellipsis",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical"
+        }}>{descripcion}</div>
+        
+        {/* Indicador visual adicional */}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          gap: 12, 
+          marginBottom: 8,
+          color: "#0ea5e9",
+          fontSize: 14,
+          fontWeight: 600
+        }}>
+          <i className="fas fa-shipping-fast" style={{ fontSize: 14 }}></i>
+          <span>Disponible para cotizar</span>
+        </div>
         {/* PRECIOS OCULTOS - COMENTADO
         <div style={{ fontWeight: 800, fontSize: 22, color: "#171717", marginBottom: 2, display: "flex", alignItems: "center", gap: 10 }}>
           ${precioFormateado}
@@ -48,15 +96,37 @@ function NeumaticoCard({ neumatico, onClick }) {
           )}
         </div>
         */}
-        <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <button
-            className="btn btn-primary btn-ver-mas"
-            style={{ borderRadius: 8, padding: "8px 18px", fontWeight: 700, fontSize: 16, border: "none", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+            className="btn btn-success btn-cotizar"
+            style={{ 
+              borderRadius: 12, 
+              padding: "12px 24px", 
+              fontWeight: 700, 
+              fontSize: 16, 
+              border: "none", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 8, 
+              cursor: "pointer",
+              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+              color: "white",
+              boxShadow: "0 4px 12px rgba(37, 211, 102, 0.3)",
+              transition: "all 0.3s ease"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = "translateY(-2px)";
+              e.target.style.boxShadow = "0 6px 20px rgba(37, 211, 102, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = "translateY(0)";
+              e.target.style.boxShadow = "0 4px 12px rgba(37, 211, 102, 0.3)";
+            }}
             onClick={e => { e.stopPropagation(); onClick(); }}
-            aria-label="Ver más"
+            aria-label="Cotizar neumático"
           >
-            <i className="fas fa-eye" style={{ fontSize: 18 }}></i>
-            <span className="ver-mas-text" style={{ display: "inline" }}> <span style={{ fontSize: 16 }}>Ver más</span></span>
+            <i className="fas fa-whatsapp" style={{ fontSize: 18 }}></i>
+            <span className="cotizar-text" style={{ display: "inline" }}> <span style={{ fontSize: 16 }}>Cotizar</span></span>
           </button>
         </div>
       </div>
@@ -64,7 +134,7 @@ function NeumaticoCard({ neumatico, onClick }) {
   );
 }
 
-// Componente para indicadores de deslizamiento
+// Componente para indicadores de deslizamiento mejorado
 function SwipeIndicator({ totalItems, currentIndex, onDotClick }) {
   if (totalItems <= 1) return null;
   
@@ -73,23 +143,46 @@ function SwipeIndicator({ totalItems, currentIndex, onDotClick }) {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 8,
-      marginTop: 16,
-      padding: '8px 0'
+      gap: 10,
+      marginTop: 20,
+      padding: '12px 0',
+      background: 'rgba(255,255,255,0.8)',
+      borderRadius: 20,
+      backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(14,165,233,0.1)',
+      boxShadow: '0 2px 12px rgba(14,165,233,0.06)'
     }}>
       {Array.from({ length: totalItems }).map((_, index) => (
         <button
           key={index}
           onClick={() => onDotClick?.(index)}
           style={{
-            width: currentIndex === index ? 24 : 8,
-            height: 8,
-            borderRadius: 4,
+            width: currentIndex === index ? 28 : 10,
+            height: 10,
+            borderRadius: 5,
             border: 'none',
-            background: currentIndex === index ? '#0ea5e9' : '#cbd5e1',
+            background: currentIndex === index 
+              ? 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)' 
+              : '#cbd5e1',
             cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            padding: 0
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            padding: 0,
+            position: 'relative',
+            boxShadow: currentIndex === index 
+              ? '0 2px 8px rgba(14,165,233,0.3)' 
+              : 'none'
+          }}
+          onMouseEnter={(e) => {
+            if (currentIndex !== index) {
+              e.target.style.background = '#94a3b8';
+              e.target.style.transform = 'scale(1.2)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (currentIndex !== index) {
+              e.target.style.background = '#cbd5e1';
+              e.target.style.transform = 'scale(1)';
+            }
           }}
           aria-label={`Ir al producto ${index + 1}`}
         />
@@ -211,9 +304,16 @@ function QuickViewModal({ neumatico, onClose, onViewFull }) {
             {neumatico.descripcion}
           </p>
           <button
-            onClick={() => onViewFull(neumatico.id)}
+            onClick={() => {
+              // Generar mensaje pre-escrito para WhatsApp
+              const mensaje = `Hola! Me interesa cotizar el neumático *${neumatico.nombre}* de la marca ${neumatico.marcas?.nombre || 'sin marca'}. ${neumatico.descripcion ? `\n\nDescripción: ${neumatico.descripcion}` : ''}\n\n¿Podrían enviarme información sobre disponibilidad y precio?\n\nGracias!`;
+              const numeroWhatsApp = "+5493515123456"; // Reemplazar con tu número real
+              const urlWhatsApp = `https://wa.me/${numeroWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`;
+              window.open(urlWhatsApp, '_blank');
+              onClose(); // Cerrar modal
+            }}
             style={{
-              background: 'linear-gradient(90deg,#0ea5e9,#38bdf8)',
+              background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
               color: '#fff',
               border: 'none',
               borderRadius: 12,
@@ -224,11 +324,12 @@ function QuickViewModal({ neumatico, onClose, onViewFull }) {
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              margin: '0 auto'
+              margin: '0 auto',
+              boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)'
             }}
           >
-            <i className="fas fa-eye"></i>
-            Ver detalles completos
+            <i className="fas fa-whatsapp"></i>
+            Cotizar por WhatsApp
           </button>
         </div>
       </div>
@@ -273,25 +374,38 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
       {mostrarFiltros && (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 16
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: 20,
+          alignItems: 'end'
         }}>
-          {/* Búsqueda */}
+          {/* Búsqueda mejorada */}
           <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
-              Buscar:
+            <label style={{ display: 'block', fontWeight: 700, marginBottom: 10, color: '#0f172a', fontSize: 16 }}>
+              <i className="fas fa-search" style={{ marginRight: 8, color: '#0ea5e9' }}></i>
+              Buscar neumático:
             </label>
             <input
               type="text"
-              placeholder="Nombre, marca, descripción..."
+              placeholder="Busca por marca, nombre o medida..."
               value={filtros.busqueda}
               onChange={(e) => setFiltros({ ...filtros, busqueda: e.target.value })}
               style={{
                 width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: 14
+                padding: '12px 16px',
+                border: '2px solid #e2e8f0',
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                background: '#fff'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#0ea5e9';
+                e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
               }}
             />
           </div>
@@ -336,9 +450,10 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
           </div>
           */}
           
-          {/* Filtro por marca */}
+          {/* Filtro por marca mejorado */}
           <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+            <label style={{ display: 'block', fontWeight: 700, marginBottom: 10, color: '#0f172a', fontSize: 16 }}>
+              <i className="fas fa-tags" style={{ marginRight: 8, color: '#0ea5e9' }}></i>
               Marca:
             </label>
             <select
@@ -346,22 +461,35 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
               onChange={(e) => setFiltros({ ...filtros, marcaSeleccionada: e.target.value })}
               style={{
                 width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: 14
+                padding: '12px 16px',
+                border: '2px solid #e2e8f0',
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: 500,
+                background: '#fff',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#0ea5e9';
+                e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
               }}
             >
-              <option value="">Todas las marcas</option>
+              <option value="">🏷️ Todas las marcas</option>
               {marcasDisponibles.map(marca => (
-                <option key={marca.id} value={marca.id}>{marca.nombre}</option>
+                <option key={marca.id} value={marca.id}>🔹 {marca.nombre}</option>
               ))}
             </select>
           </div>
           
-          {/* Ordenamiento */}
+          {/* Ordenamiento mejorado */}
           <div>
-            <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, color: '#374151' }}>
+            <label style={{ display: 'block', fontWeight: 700, marginBottom: 10, color: '#0f172a', fontSize: 16 }}>
+              <i className="fas fa-sort" style={{ marginRight: 8, color: '#0ea5e9' }}></i>
               Ordenar por:
             </label>
             <select
@@ -369,40 +497,63 @@ function FiltrosPanel({ filtros, setFiltros, ordenamiento, setOrdenamiento, marc
               onChange={(e) => setOrdenamiento(e.target.value)}
               style={{
                 width: '100%',
-                padding: '8px 12px',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: 14
+                padding: '12px 16px',
+                border: '2px solid #e2e8f0',
+                borderRadius: 12,
+                fontSize: 15,
+                fontWeight: 500,
+                background: '#fff',
+                transition: 'all 0.3s ease',
+                cursor: 'pointer'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#0ea5e9';
+                e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e2e8f0';
+                e.target.style.boxShadow = 'none';
               }}
             >
-              <option value="nombre-asc">Nombre A-Z</option>
-              <option value="nombre-desc">Nombre Z-A</option>
-              {/* OPCIONES DE PRECIO OCULTAS - COMENTADO
-              <option value="precio-asc">Precio menor a mayor</option>
-              <option value="precio-desc">Precio mayor a menor</option>
-              */}
-              <option value="marca-asc">Marca A-Z</option>
+              <option value="nombre-asc">📝 Nombre A-Z</option>
+              <option value="nombre-desc">📝 Nombre Z-A</option>
+              <option value="marca-asc">🏷️ Marca A-Z</option>
+              <option value="destacado">⭐ Destacados primero</option>
             </select>
           </div>
           
-          {/* Botón limpiar filtros */}
+          {/* Botón limpiar filtros mejorado */}
           <div style={{ display: 'flex', alignItems: 'end' }}>
             <button
               onClick={() => {
-                setFiltros({ precioMin: '', precioMax: '', marcaSeleccionada: '', busqueda: '' });
+                setFiltros({ marcaSeleccionada: '', busqueda: '' });
                 setOrdenamiento('nombre-asc');
               }}
               style={{
-                background: '#f3f4f6',
-                color: '#374151',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                padding: '8px 16px',
-                fontSize: 14,
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 12,
+                padding: '12px 20px',
+                fontSize: 15,
                 cursor: 'pointer',
-                fontWeight: 600
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.3)';
               }}
             >
+              <i className="fas fa-eraser"></i>
               Limpiar filtros
             </button>
           </div>
@@ -433,6 +584,7 @@ function CatalogoNeumaticos() {
   const [marcasDisponibles, setMarcasDisponibles] = useState([]);
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [quickViewNeumatico, setQuickViewNeumatico] = useState(null);
+  const [activeTab, setActiveTab] = useState('destacados');
 
   useEffect(() => {
     async function fetchTiposYNeumaticos() {
@@ -568,11 +720,56 @@ function CatalogoNeumaticos() {
       case 'marca-asc':
         resultado.sort((a, b) => (a.marcas?.nombre || '').localeCompare(b.marcas?.nombre || ''));
         break;
+      case 'destacado':
+        resultado.sort((a, b) => {
+          // Destacados primero, luego por nombre
+          if (a.destacado && !b.destacado) return -1;
+          if (!a.destacado && b.destacado) return 1;
+          return a.nombre.localeCompare(b.nombre);
+        });
+        break;
       default:
         break;
     }
     
     return resultado;
+  };
+
+  // Función para manejar cambio de tab
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    
+    // Scroll suave a la sección correspondiente
+    setTimeout(() => {
+      const section = document.querySelector(`[data-category="${tabId}"]`);
+      if (section) {
+        section.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        });
+      }
+    }, 100);
+  };
+
+  // Calcular contadores para las tabs
+  const calcularContadores = () => {
+    const contadores = {};
+    
+    // Destacados
+    if (destacados.length > 0) {
+      contadores['destacados'] = destacados.length;
+    }
+    
+    // Por tipo
+    tiposVehiculo.forEach(tipo => {
+      const neumaticos = neumaticosPorTipo[tipo.id] || [];
+      if (neumaticos.length > 0) {
+        contadores[tipo.id] = neumaticos.length;
+      }
+    });
+    
+    return contadores;
   };
 
   // Función para obtener el icono según el nombre de la categoría
@@ -588,20 +785,22 @@ function CatalogoNeumaticos() {
     return "fa-box";
   }
 
-  // Estilo de fondo para las categorías
+  // Estilo de fondo para las categorías con mejoras responsive
   const categoriaStyle = {
     background: '#fff',
-    borderRadius: 28,
-    boxShadow: '0 8px 32px rgba(14,165,233,0.10)',
-    border: '1.5px solid #e0f2fe',
-    padding: '36px 32px 40px 32px',
-    margin: '0 auto',
-    maxWidth: 1300,
+    borderRadius: 32,
+    boxShadow: '0 12px 48px rgba(14,165,233,0.12)',
+    border: '2px solid #e0f2fe',
+    padding: window.innerWidth > 768 ? '48px 40px 52px 40px' : '36px 32px 40px 32px',
+    margin: '0 auto 24px auto',
+    maxWidth: window.innerWidth > 1200 ? 1400 : 1300,
     width: '100%',
-    transition: 'box-shadow 0.2s',
+    transition: 'all 0.3s ease',
     display: 'flex',
     flexDirection: 'column',
-    gap: 18,
+    gap: window.innerWidth > 768 ? 24 : 18,
+    position: 'relative',
+    overflow: 'hidden'
   };
 
   if (loading) return <p style={{ textAlign: "center" }}>Cargando catálogo...</p>;
@@ -616,7 +815,22 @@ function CatalogoNeumaticos() {
   }
 
   return (
-    <div style={{ width: "100%", background: "#f3f6fa", minHeight: "100vh", paddingBottom: 32 }}>
+    <div style={{ 
+      width: "100%", 
+      background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f3f6fa 100%)",
+      minHeight: "100vh", 
+      paddingBottom: 48,
+      position: 'relative'
+    }}>
+      {/* Navegación por tabs para mobile */}
+      <MobileTabNavigation
+        tiposVehiculo={tiposOrdenados}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        showDestacados={destacados.length > 0}
+        contadores={calcularContadores()}
+      />
+      
       <style>{`
         @keyframes fadeInSlide {
           from {
@@ -638,6 +852,46 @@ function CatalogoNeumaticos() {
           }
         }
         
+        /* Estilos para feedback de swipe mejorado */
+        .catalogo-grid.swiping-left {
+          transform: translateX(-8px);
+          transition: transform 0.1s ease-out;
+        }
+        
+        .catalogo-grid.swiping-right {
+          transform: translateX(8px);
+          transition: transform 0.1s ease-out;
+        }
+        
+        .catalogo-grid.swipe-feedback {
+          position: relative;
+        }
+        
+        .catalogo-grid.swipe-feedback::after {
+          content: '';
+          position: absolute;
+          top: 50%;
+          right: -30px;
+          width: 20px;
+          height: 20px;
+          background: #0ea5e9;
+          border-radius: 50%;
+          opacity: 0;
+          transform: translateY(-50%);
+          transition: opacity 0.2s ease;
+        }
+        
+        .catalogo-grid.swiping-left.swipe-feedback::after {
+          opacity: 0.6;
+          animation: pulseSwipe 0.3s ease;
+        }
+        
+        @keyframes pulseSwipe {
+          0% { transform: translateY(-50%) scale(1); }
+          50% { transform: translateY(-50%) scale(1.2); }
+          100% { transform: translateY(-50%) scale(1); }
+        }
+        
         @media (max-width: 768px) {
           .catalogo-grid {
             display: flex !important;
@@ -652,6 +906,8 @@ function CatalogoNeumaticos() {
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             position: relative;
+            scroll-behavior: smooth;
+            overscroll-behavior-x: contain;
           }
           
           .catalogo-grid::before {
@@ -678,16 +934,21 @@ function CatalogoNeumaticos() {
             margin-left: 4px;
             margin-right: 4px;
             box-sizing: border-box;
-            transition: box-shadow 0.2s;
+            transition: all 0.3s ease;
             background: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 16px rgba(14,165,233,0.08);
+            border-radius: 24px;
+            padding: 28px;
+            border: 2px solid #e0f2fe;
+            box-shadow: 0 6px 24px rgba(14,165,233,0.12);
+            display: flex;
+            flex-direction: column;
+            min-height: 320px;
           }
           
           .neumatico-card:hover {
-            box-shadow: 0 8px 24px rgba(14,165,233,0.12);
+            box-shadow: 0 12px 32px rgba(14,165,233,0.18);
+            transform: translateY(-4px);
+            border-color: #0ea5e9;
           }
           
           .mobile-category-header {
@@ -701,21 +962,44 @@ function CatalogoNeumaticos() {
         @media (min-width: 769px) {
           .catalogo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 36px;
+            padding: 0 20px;
+            align-items: stretch;
           }
           .neumatico-card {
             min-width: 0;
             max-width: 100%;
-            background: #fff;
-            border-radius: 20px;
-            padding: 24px;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 16px rgba(14,165,233,0.08);
-            transition: box-shadow 0.2s;
+            background: linear-gradient(145deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: 28px;
+            padding: 36px;
+            border: 2px solid #e0f2fe;
+            box-shadow: 0 8px 32px rgba(14,165,233,0.12);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            min-height: 220px;
+            position: relative;
+            overflow: hidden;
+          }
+          .neumatico-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(14,165,233,0.03), transparent);
+            transition: left 0.6s ease;
+          }
+          .neumatico-card:hover::before {
+            left: 100%;
           }
           .neumatico-card:hover {
-            box-shadow: 0 8px 24px rgba(14,165,233,0.12);
+            box-shadow: 0 12px 32px rgba(14,165,233,0.18);
+            transform: translateY(-4px);
+            border-color: #0ea5e9;
           }
           .mobile-category-header {
             display: none;
@@ -745,7 +1029,13 @@ function CatalogoNeumaticos() {
                 <NeumaticoCard
                   key={n.id}
                   neumatico={n}
-                  onClick={() => router.push(`/catalogo/${n.id}`)}
+                  onClick={() => {
+                    // Generar mensaje pre-escrito para WhatsApp
+                    const mensaje = `Hola! Me interesa cotizar el neumático *${n.nombre}* de la marca ${n.marcas?.nombre || 'sin marca'}. ${n.descripcion ? `\n\nDescripción: ${n.descripcion}` : ''}\n\n¿Podrían enviarme información sobre disponibilidad y precio?\n\nGracias!`;
+                    const numeroWhatsApp = "+5493515123456"; // Reemplazar con tu número real
+                    const urlWhatsApp = `https://wa.me/${numeroWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`;
+                    window.open(urlWhatsApp, '_blank');
+                  }}
                 />
               ))}
             </div>
@@ -792,7 +1082,13 @@ function CatalogoNeumaticos() {
                     <NeumaticoCard
                       key={n.id}
                       neumatico={n}
-                      onClick={() => router.push(`/catalogo/${n.id}`)}
+                      onClick={() => {
+                        // Generar mensaje pre-escrito para WhatsApp
+                        const mensaje = `Hola! Me interesa cotizar el neumático *${n.nombre}* de la marca ${n.marcas?.nombre || 'sin marca'}. ${n.descripcion ? `\n\nDescripción: ${n.descripcion}` : ''}\n\n¿Podrían enviarme información sobre disponibilidad y precio?\n\nGracias!`;
+                        const numeroWhatsApp = "+5493515123456"; // Reemplazar con tu número real
+                        const urlWhatsApp = `https://wa.me/${numeroWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`;
+                        window.open(urlWhatsApp, '_blank');
+                      }}
                     />
                   ))
                 )}

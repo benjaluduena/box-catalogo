@@ -95,16 +95,39 @@ const NeumaticoCard = memo(function NeumaticoCard({
           
           <div className={styles.actionButtons}>
             <button
-              className={`btn btn-primary ${styles.verMasProductBtn}`}
+              className={`btn btn-success ${styles.cotizarProductBtn}`}
               onClick={(e) => { 
                 e.stopPropagation(); 
                 onClick?.(); 
               }}
-              aria-label={`Ver más detalles de ${nombre}`}
+              aria-label={`Cotizar ${nombre}`}
+              style={{
+                background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontSize: '16px',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(37, 211, 102, 0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 4px 12px rgba(37, 211, 102, 0.3)';
+              }}
             >
-              <i className="fas fa-eye" style={{ fontSize: 18 }}></i>
-              <span className="ver-mas-text">
-                <span style={{ fontSize: 16 }}>Ver más</span>
+              <i className="fas fa-whatsapp" style={{ fontSize: 18 }}></i>
+              <span className="cotizar-text">
+                <span style={{ fontSize: 16 }}>Cotizar</span>
               </span>
             </button>
           </div>

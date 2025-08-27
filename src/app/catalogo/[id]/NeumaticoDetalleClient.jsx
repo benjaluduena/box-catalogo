@@ -38,7 +38,7 @@ export default function NeumaticoDetalleClient() {
       // Obtener medidas por separado
       const { data: medidas } = await supabase
         .from("medidas")
-        .select("id, medida, stock")
+        .select("id, medida")
         .eq("neumatico_id", id);
         
       // Combinar los datos
@@ -64,7 +64,7 @@ export default function NeumaticoDetalleClient() {
     setCantidad((prev) => {
       const nueva = prev + delta;
       if (nueva < 1) return 1;
-      if (medidaSeleccionada && medidaSeleccionada.stock && nueva > medidaSeleccionada.stock) return medidaSeleccionada.stock;
+      // Sin límite de stock ya que no manejamos stock
       return nueva;
     });
   };
@@ -74,7 +74,15 @@ export default function NeumaticoDetalleClient() {
     setCantidad(1);
   };
 
-  const whatsappUrl = `https://wa.me/543573403958?text=Hola,%20quiero%20consultar%20por%20el%20neumático%20${encodeURIComponent(neumatico.nombre)}%20en%20medida%20${encodeURIComponent(medidaSeleccionada?.medida || "")}%20x%20${cantidad}`;
+  const whatsappUrl = `https://wa.me/5493515123456?text=${encodeURIComponent(`Hola! Me interesa cotizar el neumático *${neumatico.nombre}* de la marca ${neumatico.marcas?.nombre || 'sin marca'}. 
+
+Medida: ${medidaSeleccionada?.medida || 'No seleccionada'}
+Cantidad: ${cantidad} unidades
+${neumatico.descripcion ? `\nDescripción: ${neumatico.descripcion}` : ''}
+
+¿Podrían enviarme información sobre disponibilidad y precio?
+
+Gracias!`)}`;
 
   // Schema.org para producto
   const productSchema = {
@@ -221,9 +229,32 @@ export default function NeumaticoDetalleClient() {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ background: "linear-gradient(90deg,#0ea5e9,#38bdf8)", color: "#fff", borderRadius: 16, padding: "16px 36px", fontWeight: 800, fontSize: 19, textDecoration: "none", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 4px 18px rgba(37,211,102,0.10)", border: "none", transition: "background 0.2s" }}
+              style={{ 
+                background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)", 
+                color: "#fff", 
+                borderRadius: 16, 
+                padding: "16px 36px", 
+                fontWeight: 800, 
+                fontSize: 19, 
+                textDecoration: "none", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: 12, 
+                boxShadow: "0 4px 18px rgba(37,211,102,0.3)", 
+                border: "none", 
+                transition: "all 0.3s ease",
+                cursor: "pointer"
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = "translateY(-2px)";
+                e.target.style.boxShadow = "0 6px 24px rgba(37,211,102,0.4)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = "translateY(0)";
+                e.target.style.boxShadow = "0 4px 18px rgba(37,211,102,0.3)";
+              }}
             >
-              <i className="fab fa-whatsapp" style={{ fontSize: 24 }}></i> WhatsApp
+              <i className="fab fa-whatsapp" style={{ fontSize: 24 }}></i> Cotizar por WhatsApp
             </a>
           </div>
         </div>

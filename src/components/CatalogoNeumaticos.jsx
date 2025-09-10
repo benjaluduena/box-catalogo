@@ -5,14 +5,40 @@ import { useRouter } from "next/navigation";
 import MobileTabNavigation from './MobileTabNavigation';
 import { useEnhancedSwipe } from '../hooks/useEnhancedSwipe';
 
-// Subcomponente para la tarjeta de neumático
-function NeumaticoCard({ neumatico, onClick }) {
+// Subcomponente para la tarjeta de neumático con animaciones de entrada
+function NeumaticoCard({ neumatico, onClick, index = 0 }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef(null);
   const { nombre, descripcion, precio, precio_anterior, imagen, marcas } = neumatico;
+
+  // Intersection Observer para animaciones de entrada
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setIsVisible(true), index * 100); // Delay escalonado
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [index]);
+
   // Formateo de precios con puntos - COMENTADO PARA OCULTAR PRECIOS
   // const precioFormateado = typeof precio === 'number' ? precio.toLocaleString('es-AR') : precio;
   // const precioAnteriorFormateado = typeof precio_anterior === 'number' ? precio_anterior.toLocaleString('es-AR') : precio_anterior;
   return (
-    <div className="neumatico-card" onClick={onClick} style={{ cursor: "pointer", position: "relative" }}>
+    <div 
+      ref={cardRef}
+      className={`neumatico-card ${isVisible ? 'card-visible' : 'card-hidden'}`} 
+      onClick={onClick} 
+      style={{ cursor: "pointer", position: "relative" }}
+    >
       {/* Banda de marca reubicada a la izquierda */}
       {marcas?.nombre && (
         <div style={{
@@ -75,7 +101,7 @@ function NeumaticoCard({ neumatico, onClick }) {
           WebkitBoxOrient: "vertical"
         }}>{descripcion}</div>
         
-        {/* Indicador visual adicional */}
+        {/* Indicador visual adicional con micro-animación */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
@@ -85,7 +111,7 @@ function NeumaticoCard({ neumatico, onClick }) {
           fontSize: 14,
           fontWeight: 600
         }}>
-          <i className="fas fa-shipping-fast" style={{ fontSize: 14 }}></i>
+          <i className="fas fa-shipping-fast icon-pulse" style={{ fontSize: 14 }}></i>
           <span>Disponible para cotizar</span>
         </div>
         {/* PRECIOS OCULTOS - COMENTADO
@@ -125,7 +151,7 @@ function NeumaticoCard({ neumatico, onClick }) {
             onClick={e => { e.stopPropagation(); onClick(); }}
             aria-label="Cotizar neumático"
           >
-            <i className="fas fa-whatsapp" style={{ fontSize: 18 }}></i>
+            <i className="fas fa-whatsapp icon-bounce" style={{ fontSize: 18 }}></i>
             <span className="cotizar-text" style={{ display: "inline" }}> <span style={{ fontSize: 16 }}>Cotizar</span></span>
           </button>
         </div>
@@ -814,6 +840,15 @@ function CatalogoNeumaticos() {
     tiposOrdenados.push(agro);
   }
 
+  // Hook para efectos parallax
+  const [scrollY, setScrollY] = useState(0);
+  
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div style={{ 
       width: "100%", 
@@ -822,6 +857,20 @@ function CatalogoNeumaticos() {
       paddingBottom: 48,
       position: 'relative'
     }}>
+      {/* Elemento parallax de fondo */}
+      <div 
+        className="parallax-bg"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '120%',
+          background: 'radial-gradient(circle at 20% 80%, rgba(14,165,233,0.03) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.03) 0%, transparent 50%)',
+          transform: `translateY(${scrollY * 0.5}px)`,
+          zIndex: -1
+        }}
+      />
       {/* Navegación por tabs para mobile */}
       <MobileTabNavigation
         tiposVehiculo={tiposOrdenados}
@@ -1014,8 +1063,8 @@ function CatalogoNeumaticos() {
       {destacados.length > 0 && (
         <div key="destacados" style={{ marginBottom: 56 }} data-category="destacados">
           <div style={categoriaStyle}>
-            <h2 style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <i className={`fas ${getCategoriaIcon('destacados')}`} style={{ fontSize: 26, color: '#0ea5e9', minWidth: 28 }}></i>
+            <h2 className="section-title" style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <i className={`fas ${getCategoriaIcon('destacados')} icon-float`} style={{ fontSize: 26, color: '#0ea5e9', minWidth: 28 }}></i>
               Destacados
             </h2>
             
@@ -1025,10 +1074,11 @@ function CatalogoNeumaticos() {
               className="catalogo-grid"
               onScroll={(e) => handleScroll(e, 'destacados')}
             >
-              {destacados.map(n => (
+              {destacados.map((n, index) => (
                 <NeumaticoCard
                   key={n.id}
                   neumatico={n}
+                  index={index}
                   onClick={() => {
                     // Generar mensaje pre-escrito para WhatsApp
                     const mensaje = `Hola! Me interesa cotizar el neumático *${n.nombre}* de la marca ${n.marcas?.nombre || 'sin marca'}. ${n.descripcion ? `\n\nDescripción: ${n.descripcion}` : ''}\n\n¿Podrían enviarme información sobre disponibilidad y precio?\n\nGracias!`;
@@ -1057,8 +1107,8 @@ function CatalogoNeumaticos() {
           <div key={tipo.id} style={{ marginBottom: 56 }} data-category={tipo.id}>
             <div style={categoriaStyle}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-                <h2 style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <i className={`fas ${getCategoriaIcon(tipo.nombre)}`} style={{ fontSize: 26, color: '#0ea5e9', minWidth: 28 }}></i>
+                <h2 className="section-title" style={{ fontSize: 28, fontWeight: 900, color: "#0ea5e9", margin: 0, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <i className={`fas ${getCategoriaIcon(tipo.nombre)} icon-float`} style={{ fontSize: 26, color: '#0ea5e9', minWidth: 28 }}></i>
                   {tipo.nombre}
                 </h2>
                 {neumaticos.length > 3 && (
@@ -1078,10 +1128,11 @@ function CatalogoNeumaticos() {
                 {neumaticos.length === 0 ? (
                   <div style={{ color: "#64748b", fontSize: 16, padding: 24 }}>No hay neumáticos para este tipo.</div>
                 ) : (
-                  mostrarNeumaticos.map(n => (
+                  mostrarNeumaticos.map((n, index) => (
                     <NeumaticoCard
                       key={n.id}
                       neumatico={n}
+                      index={index}
                       onClick={() => {
                         // Generar mensaje pre-escrito para WhatsApp
                         const mensaje = `Hola! Me interesa cotizar el neumático *${n.nombre}* de la marca ${n.marcas?.nombre || 'sin marca'}. ${n.descripcion ? `\n\nDescripción: ${n.descripcion}` : ''}\n\n¿Podrían enviarme información sobre disponibilidad y precio?\n\nGracias!`;

@@ -33,6 +33,22 @@ function MobileTabNavigation({
   return (
     <>
       <style>{`
+        @keyframes tabSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes tabPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        
         @media (max-width: 768px) {
           .mobile-tab-navigation {
             position: sticky;
@@ -71,22 +87,25 @@ function MobileTabNavigation({
             min-width: 80px;
             flex-shrink: 0;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             position: relative;
+            animation: tabSlideIn 0.6s ease-out;
           }
           
           .mobile-tab.active {
             background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
             border-color: #0ea5e9;
             color: white;
-            box-shadow: 0 4px 12px rgba(14,165,233,0.3);
+            box-shadow: 0 6px 16px rgba(14,165,233,0.4);
+            transform: scale(1.05);
           }
           
           .mobile-tab:not(.active):hover {
             background: #e0f2fe;
             border-color: #0ea5e9;
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 6px 16px rgba(14,165,233,0.2);
           }
           
           .mobile-tab-icon {
@@ -162,7 +181,7 @@ function MobileTabNavigation({
               onClick={() => onTabChange(tab.id)}
               aria-label={`Ver ${tab.nombre}`}
             >
-              <i className={`fas ${getCategoriaIcon(tab.nombre)} mobile-tab-icon`}></i>
+              <i className={`fas ${getCategoriaIcon(tab.nombre)} mobile-tab-icon ${activeTab === tab.id ? 'icon-glow' : 'icon-float'}`}></i>
               <span className="mobile-tab-label">{tab.nombre}</span>
               {contadores[tab.id] > 0 && (
                 <span className="mobile-tab-counter">

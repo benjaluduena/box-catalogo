@@ -20,7 +20,7 @@ export default function AdminLogin() {
     setLoginAttempts(attempts);
     setIsLockedOut(lockedOut);
     
-    if (lockedOut) {
+    if (lockedOut && typeof window !== 'undefined') {
       const lockoutUntil = localStorage.getItem('adminLockoutUntil');
       if (lockoutUntil) {
         const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
@@ -44,10 +44,12 @@ export default function AdminLogin() {
     } catch (error) {
       setError(error.message);
       setIsLockedOut(true);
-      const lockoutUntil = localStorage.getItem('adminLockoutUntil');
-      if (lockoutUntil) {
-        const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
-        setLockoutTime(remaining);
+      if (typeof window !== 'undefined') {
+        const lockoutUntil = localStorage.getItem('adminLockoutUntil');
+        if (lockoutUntil) {
+          const remaining = Math.ceil((parseInt(lockoutUntil) - Date.now()) / 1000 / 60);
+          setLockoutTime(remaining);
+        }
       }
     } finally {
       setLoading(false);

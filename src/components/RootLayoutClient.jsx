@@ -2,7 +2,6 @@
 import Header from "./Header";
 import Footer from "./Footer";
 import WhatsappFloat from "./WhatsappFloat";
-import AdminPanel from "./AdminPanel";
 import { usePathname } from "next/navigation";
 
 export default function RootLayoutClient({ children }) {
@@ -14,7 +13,6 @@ export default function RootLayoutClient({ children }) {
       {children}
       {!isAdmin && <Footer />}
       {!isAdmin && <WhatsappFloat />}
-      {!isAdmin && <AdminPanel />}
     </>
   );
-} 
+} 

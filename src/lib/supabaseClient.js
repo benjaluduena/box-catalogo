@@ -7,8 +7,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-// Crear cliente base
-const baseClient = createClient(supabaseUrl, supabaseAnonKey);
+// Crear cliente base manejando el error de localStorage en SSR
+const customStorage = typeof window !== 'undefined' ? window.localStorage : {
+  getItem: () => null,
+  setItem: () => {},
+  removeItem: () => {}
+};
+
+const baseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: typeof window !== 'undefined',
+    autoRefreshToken: typeof window !== 'undefined',
+    detectSessionInUrl: typeof window !== 'undefined',
+    storage: customStorage
+  }
+});
 
 // Crear wrapper que intercepte y corrija consultas problemáticas
 export const supabase = {

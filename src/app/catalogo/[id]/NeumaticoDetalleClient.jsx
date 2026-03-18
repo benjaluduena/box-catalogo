@@ -74,7 +74,7 @@ export default function NeumaticoDetalleClient() {
     setCantidad(1);
   };
 
-  const whatsappUrl = `https://wa.me/5493515123456?text=${encodeURIComponent(`Hola! Me interesa cotizar el neumático *${neumatico.nombre}* de la marca ${neumatico.marcas?.nombre || 'sin marca'}. 
+  const whatsappUrl = `https://wa.me/543573403958?text=${encodeURIComponent(`Hola! Me interesa cotizar el neumático *${neumatico.nombre}* de la marca ${neumatico.marcas?.nombre || 'sin marca'}. 
 
 Medida: ${medidaSeleccionada?.medida || 'No seleccionada'}
 Cantidad: ${cantidad} unidades

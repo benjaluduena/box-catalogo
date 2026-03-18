@@ -455,8 +455,16 @@ export default function NeumaticosPage() {
                         alignItems: "center",
                         justifyContent: "center",
                         marginBottom: "16px",
-                        border: "2px solid #e2e8f0"
-                      }}>
+                        border: "2px solid #e2e8f0",
+                        position: "relative",
+                        cursor: "pointer"
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(neumatico);
+                      }}
+                      title="Clic para cambiar imagen"
+                      >
                         {neumatico.imagen ? (
                           <img
                             src={neumatico.imagen}
@@ -471,6 +479,22 @@ export default function NeumaticosPage() {
                         ) : (
                           <i className="fas fa-tire" style={{ color: "#cbd5e1", fontSize: "32px" }}></i>
                         )}
+                        <div style={{
+                          position: "absolute",
+                          bottom: "-4px",
+                          right: "-4px",
+                          width: "28px",
+                          height: "28px",
+                          background: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "2px solid white",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                        }}>
+                          <i className="fas fa-camera" style={{ color: "white", fontSize: "12px" }}></i>
+                        </div>
                       </div>
 
                       {/* Info */}
@@ -778,11 +802,11 @@ export default function NeumaticosPage() {
                     Imagen
                   </label>
                   <div style={{
-                    border: "2px dashed #cbd5e1",
+                    border: `2px dashed ${formData.imagen ? "#0ea5e9" : "#cbd5e1"}`,
                     borderRadius: "10px",
                     padding: "20px",
                     textAlign: "center",
-                    background: formData.imagen ? "#f0fdf4" : "#f8fafc",
+                    background: formData.imagen ? "#f0f9ff" : "#f8fafc",
                     transition: "all 0.2s ease"
                   }}
                   onDrop={(e) => {
@@ -798,16 +822,69 @@ export default function NeumaticosPage() {
                           src={formData.imagen}
                           alt="Preview"
                           style={{
-                            width: "80px",
-                            height: "80px",
+                            width: "100px",
+                            height: "100px",
                             objectFit: "contain",
                             borderRadius: "8px",
-                            marginBottom: "8px"
+                            marginBottom: "12px",
+                            border: "2px solid #e0f2fe"
                           }}
                         />
-                        <p style={{ color: "#16a34a", fontSize: "14px", margin: 0 }}>
+                        <p style={{ color: "#16a34a", fontSize: "14px", margin: "0 0 12px 0", fontWeight: "600" }}>
                           ✅ Imagen cargada
                         </p>
+                        <div style={{ display: "flex", gap: "8px", justifyContent: "center", flexWrap: "wrap" }}>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) handleImageUpload(file);
+                            }}
+                            style={{ display: "none" }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{
+                              padding: "8px 16px",
+                              background: "linear-gradient(135deg, #0ea5e9, #38bdf8)",
+                              color: "white",
+                              border: "none",
+                              borderRadius: "8px",
+                              fontWeight: "600",
+                              fontSize: "13px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            <i className="fas fa-camera"></i>
+                            Cambiar imagen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, imagen: "" })}
+                            style={{
+                              padding: "8px 16px",
+                              background: "#fef2f2",
+                              color: "#dc2626",
+                              border: "1px solid #fecaca",
+                              borderRadius: "8px",
+                              fontWeight: "600",
+                              fontSize: "13px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px"
+                            }}
+                          >
+                            <i className="fas fa-trash"></i>
+                            Eliminar
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div>
@@ -851,6 +928,35 @@ export default function NeumaticosPage() {
                         Subiendo imagen...
                       </p>
                     )}
+                  </div>
+                  {/* Campo de URL manual */}
+                  <div style={{ marginTop: "10px" }}>
+                    <label style={{
+                      display: "block",
+                      fontWeight: "500",
+                      marginBottom: "4px",
+                      color: "#64748b",
+                      fontSize: "12px"
+                    }}>
+                      O pegar URL de imagen directamente:
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.imagen}
+                      onChange={(e) => setFormData({ ...formData, imagen: e.target.value })}
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        border: "2px solid #e2e8f0",
+                        borderRadius: "8px",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                        color: "#475569"
+                      }}
+                      onFocus={(e) => e.target.style.borderColor = "#0ea5e9"}
+                      onBlur={(e) => e.target.style.borderColor = "#e2e8f0"}
+                      placeholder="https://ejemplo.com/imagen.jpg"
+                    />
                   </div>
                 </div>
               </div>

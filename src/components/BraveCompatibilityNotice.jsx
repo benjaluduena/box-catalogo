@@ -8,23 +8,27 @@ export default function BrowserCompatibilityNotice() {
 
   useEffect(() => {
     // Detectar tipo de navegador
-    const isBrave = navigator.brave && navigator.brave.isBrave;
-    const isEdge = navigator.userAgent.includes('Edg/');
-    const isDismissed = localStorage.getItem('browser-notice-dismissed');
-    
-    if (isBrave && !isDismissed) {
-      setBrowserType('brave');
-      setShowNotice(true);
-    } else if (isEdge && !isDismissed) {
-      setBrowserType('edge');
-      setShowNotice(true);
+    if (typeof window !== 'undefined') {
+      const isBrave = navigator.brave && navigator.brave.isBrave;
+      const isEdge = navigator.userAgent.includes('Edg/');
+      const isDismissed = localStorage.getItem('browser-notice-dismissed');
+      
+      if (isBrave && !isDismissed) {
+        setBrowserType('brave');
+        setShowNotice(true);
+      } else if (isEdge && !isDismissed) {
+        setBrowserType('edge');
+        setShowNotice(true);
+      }
     }
   }, []);
 
   const handleDismiss = () => {
     setDismissed(true);
     setShowNotice(false);
-    localStorage.setItem('browser-notice-dismissed', 'true');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('browser-notice-dismissed', 'true');
+    }
   };
 
   const getNoticeContent = () => {

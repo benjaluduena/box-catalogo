@@ -25,7 +25,7 @@ export default function AdminLayout({ children }) {
 
     // Verificar sesión cada 5 minutos
     const sessionCheck = setInterval(() => {
-      if (auth.isAuthenticated()) {
+      if (typeof window !== 'undefined' && auth.isAuthenticated()) {
         const loginTime = localStorage.getItem('adminLoginTime');
         if (loginTime) {
           const now = Date.now();
